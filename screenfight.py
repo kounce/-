@@ -151,7 +151,6 @@ class ScreenFight:
 
 if __name__ == '__main__':
     all_sprites = pygame.sprite.Group()
-    borders = pygame.sprite.Group()
     screenfight = ScreenFight('KIRA', 'LV 19', 'HP', 'KR', 400, 200)
     clock = pygame.time.Clock()
     fps = 60
