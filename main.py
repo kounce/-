@@ -6,6 +6,7 @@ pygame.init()
 size = width, height = 800, 600
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Путь к славе')
+invincibility_color = [pygame.Color('orange'), pygame.Color('purple')]
 
 
 def load_image(name, colorkey=None):
@@ -89,7 +90,7 @@ def fighting_menu():
         enemy2.image.blit(image, (0, 0))
     enemy2.image = pygame.transform.scale(enemy2.image, (400, 400))
     enemy3 = pygame.sprite.Sprite()
-    enemy3.image = load_image('third_enemy.jpg')  # фото третьего врага
+    enemy3.image = load_image('third_enemy.png')  # фото третьего врага
     enemy3.rect = enemy1.image.get_rect()
     if not com3:
         rect = enemy3.image.get_rect()
@@ -99,16 +100,12 @@ def fighting_menu():
     enemy3.image = pygame.transform.scale(enemy3.image, (400, 400))
     enemy_shown = 0
     enemies = [enemy1, enemy2, enemy3]
-    pygame.init()
-    size = WIDTH, HEIGHT = 800, 600
+
     font = pygame.font.Font('data/game_font.otf', 32)
     text = font.render("Выберите врага", True, 'white')
     text_x = 257
     text_y = 535
-    screen = pygame.display.set_mode(size)
-    pygame.display.set_caption('Путь к славе')
     running = True
-    clock = pygame.time.Clock()
     enemy1.rect.x, enemy1.rect.y = 200, 68
     enemy2.rect.x, enemy2.rect.y = 200, 68
     enemy3.rect.x, enemy3.rect.y = 200, 68
@@ -151,7 +148,7 @@ def fighting_menu():
         pygame.draw.polygon(screen, ('yellow' if 30 < mouse_x < 70 and 275 < mouse_y < 325 else
                                      'white'), ((800 - 730, 275), (800 - 770, 300), (800 - 730, 325)))
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(fps)
     return enemy_shown
 
 
@@ -175,7 +172,7 @@ class HUD:
         screen.blit(string_rendered, intro_rect)
 
     def draw_lvl(self):  # отрисовка уровня
-        string_rendered = self.font.render(self.lvl, 1, pygame.Color('white'))
+        string_rendered = self.font.render('LV ' + self.lvl, 1, pygame.Color('white'))
         intro_rect = string_rendered.get_rect()
         intro_rect.top = 490
         intro_rect.x = 120
@@ -252,10 +249,15 @@ class Player(pygame.sprite.Sprite):  # класс игрока
         super().__init__(all_sprites)
         # создание игрока в поле
         self.image = pygame.Surface((15, 15))
-        self.image.fill((255, 255, 255))
+        self.image.fill(pygame.Color('orange'))
         self.rect = self.image.get_rect()
         self.rect.x = 380
         self.rect.y = 427
+        self.invincibility = False
+        # таймер для неуязвимости игрока после получения урона
+        self.timer = 0
+        # переменная, чтобы узнать прошло ли время, чтобы сменить цвет игрока во время неуязвимости
+        self.change_color = 0
 
     # функции передвижения
     def move_right(self):
@@ -282,10 +284,25 @@ class Player(pygame.sprite.Sprite):  # класс игрока
     def turn(self):
         ...
 
-    def take_damage(self, hp):
-        if pygame.sprite.spritecollideany(self, frog.particles_list):
-            hp -= 5
-            hud.hp = hp
+    # функция для получения урона игроком
+    def take_damage(self, health, invincibility):
+        if pygame.sprite.spritecollideany(self, frog.particles_list) and not invincibility:
+            health -= 5
+            hud.hp = health
+            self.invincibility = True
+
+    def update(self):
+        if self.invincibility:
+            self.timer += 1
+            self.image.fill(invincibility_color[1])
+            if self.timer >= 120:
+                self.invincibility = False
+                self.timer = 0
+                self.change_color = 0
+                self.image.fill(pygame.Color('orange'))
+        if self.timer == self.change_color + 15:
+            self.change_color += 15
+            invincibility_color.reverse()
 
 
 def load_tactic(file_name):
@@ -527,7 +544,7 @@ if __name__ == '__main__':
         screen.fill((0, 0, 0))
         if frog.is_attacking():
             frog.move()
-            player.take_damage(hud.hp)
+            player.take_damage(hud.hp, player.invincibility)
         if key_a:
             player.move_left()
         if key_d:
