@@ -286,10 +286,11 @@ class Player(pygame.sprite.Sprite):  # класс игрока
 
     # функция для получения урона игроком
     def take_damage(self, health, invincibility):
-        if pygame.sprite.spritecollideany(self, frog.particles_list) and not invincibility:
-            health -= 5
-            hud.hp = health
-            self.invincibility = True
+        for particle in frog.particles_list:
+            if pygame.sprite.collide_mask(self, particle) and not invincibility:
+                health -= 5
+                hud.hp = health
+                self.invincibility = True
 
     def update(self):
         if self.invincibility:
