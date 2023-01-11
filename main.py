@@ -457,15 +457,17 @@ class Frog(AnimatedEnemy):
         super().__init__(sheets, columns, rows, x, y, s, width, height)
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'frog'  # названия врага, для взаимодействия с файлами игры
-        self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёту
+        self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёdту
         self.tactic = None  # тактика атаки
+        self.past_attack = 0  # переменная, чтобы атаки не повторялись слишком часто
 
     def move(self):
         """Функция выбирает случайную тактику из возможных и использует ее для атаки"""
         if self.attacking_count == 0:  # если это первый кадр, то выбирается случайная тактика
-            from random import randint
-            # пока тактика только одна, поэтому randint выбирает между 1 и 1 :)
-            self.tactic = load_tactic(self.enemy_name + '_attack_' + str(randint(1, 1)) + '.txt')
+            from random import choice
+            attack = choice([int(x) for x in range(1, 5) if x != self.past_attack])
+            self.past_attack = attack
+            self.tactic = load_tactic(self.enemy_name + '_attack_' + str(attack) + '.txt')
         try:
             self.attacking_count += 1  # считаем кадры
             # если кадр не последний, то успешно создается новая частица
