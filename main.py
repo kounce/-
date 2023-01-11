@@ -352,6 +352,7 @@ class Particle(pygame.sprite.Sprite):
         # порядок записи сверху соответствует расположению переменных при принятии
         super().__init__(all_sprites)
         self.image, self.rect = im, im.get_rect()  # изображение
+        self.mask = pygame.mask.from_surface(self.image)  # маска
         self.x, self.y = x, y  # позиция
         self.vx, self.vy = vx, vy  # скорость по обеим осям
         self.ax, self.ay = ax, ay  # ускорение по обеим осям
