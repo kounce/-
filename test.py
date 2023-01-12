@@ -477,7 +477,18 @@ class AnimatedEnemy(pygame.sprite.Sprite):
                 sprite = pygame.sprite.Sprite(all_sprites)
                 sprite.image = ending_text
                 sprite.rect = ending_text.get_rect()
+                with open('data/enemies_completed.txt', 'r', newline='') as file2:
+                    data = file2.readlines()
+                    data = [int(x.strip()) for x in data]
+                    file2.close()
+                com1, com2, com3 = data
                 sprite.rect.x, sprite.rect.y = 400 - sprite.rect.width // 2, 100
+                with open('data/enemies_completed.txt', 'w', newline='') as file1:
+                    if self.type == 'Frog':
+                        file1.write(f'1\n1\n{com3}')
+                    if self.type == 'Demon':
+                        file1.write(f'1\n{com2}\n1')
+                    file1.close()
             if self.ending_frames == self.ending_frames_sum:
                 return True
             else:
@@ -501,6 +512,7 @@ class Frog(AnimatedEnemy):
         self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёту
         self.tactic = None  # тактика атаки
         self.past_attack = 0  # переменная, чтобы атаки не повторялись слишком часто
+        self.type = 'Frog'
 
     def move(self):
         """Функция выбирает случайную тактику из возможных и использует ее для атаки"""
@@ -544,6 +556,7 @@ class Demon(AnimatedEnemy):
         self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёту
         self.tactic = None  # тактика атаки
         self.past_attack = 0  # переменная, чтобы атаки не повторялись слишком часто
+        self.type = 'Demon'
 
     def move(self):
         """Функция выбирает случайную тактику из возможных и использует ее для атаки"""
@@ -587,6 +600,7 @@ class Cat(AnimatedEnemy):
         self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёту
         self.tactic = None  # тактика атаки
         self.past_attack = 0  # переменная, чтобы атаки не повторялись слишком часто
+        self.type = 'Cat'
 
     def move(self):
         """Функция выбирает случайную тактику из возможных и использует ее для атаки"""
