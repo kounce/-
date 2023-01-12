@@ -371,6 +371,9 @@ class SpriteSheet:
     def get_frames_num(self):
         return len(self.images) * self.s
 
+    def get_last_frame(self):
+        return self.images[-1]
+
 
 class Particle(pygame.sprite.Sprite):
     """Класс частиц"""
@@ -416,6 +419,8 @@ class AnimatedEnemy(pygame.sprite.Sprite):
         self.rect = self.waiting_sheet.get_rect()  # задаем рект
         self.rect = self.rect.move(x, y)
         self.ending_frames = 0
+        self.ending_frames_sum = self.dying_sheet.get_frames_num() + 180
+        self.dying_sheet_frames_num = self.dying_sheet.get_frames_num()
 
     def update(self):
         self.sheet.update()
@@ -465,7 +470,18 @@ class AnimatedEnemy(pygame.sprite.Sprite):
     def dying_animation(self):
         if self.status == 2:
             self.ending_frames += 1
-            return True if self.ending_frames == self.dying_sheet.get_frames_num() else False
+            if self.ending_frames == self.dying_sheet.get_frames_num():
+                self.dying_sheet = SpriteSheet(self.dying_sheet.get_last_frame(), 1, 1, 180)
+                font = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
+                ending_text = font.render('you won!', 1, pygame.Color('white'))
+                sprite = pygame.sprite.Sprite(all_sprites)
+                sprite.image = ending_text
+                sprite.rect = ending_text.get_rect()
+                sprite.rect.x, sprite.rect.y = 400 - sprite.rect.width // 2, 100
+            if self.ending_frames == self.ending_frames_sum:
+                return True
+            else:
+                return False
 
     def get_hit(self, n):
         self.hp -= n
