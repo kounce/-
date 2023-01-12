@@ -321,8 +321,11 @@ def load_tactic(file_name):
             break
         # Частица в формате кадр: изображение, x, y, скорость по x, скорость по y, ускорение по x, ускорение по y
         # всё сразу переделывается в нужные типы
-        res[int(part[0])] = [load_image(part[1], colorkey=part[-1]),
-                             *[int(x) for x in part[2:6]], *[float(x) for x in part[6:8]]]
+        if len(part) == 9:
+            res[int(part[0])] = [load_image(part[1], colorkey=part[-1]),
+                                 *[int(x) for x in part[2:6]], *[float(x) for x in part[6:8]]]
+        if len(part) == 8:
+            res[int(part[0])] = [load_image(part[1]), *[int(x) for x in part[2:6]], *[float(x) for x in part[6:8]]]
     # возвращает значения в виде библиотеки
     return res
 
@@ -562,7 +565,7 @@ class Demon(AnimatedEnemy):
         """Функция выбирает случайную тактику из возможных и использует ее для атаки"""
         if self.attacking_count == 0:  # если это первый кадр, то выбирается случайная тактика
             from random import choice
-            attack = choice([int(x) for x in range(1, 3) if x != self.past_attack])
+            attack = choice([int(x) for x in range(1, 9) if x != self.past_attack])
             self.past_attack = attack
             self.tactic = load_tactic(self.enemy_name + '_attack_' + str(attack) + '.txt')
         try:
