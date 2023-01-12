@@ -502,16 +502,58 @@ class Frog(AnimatedEnemy):
 
 
 class Demon(AnimatedEnemy):
-    """Класс первого врага - демона"""
+    """Класс второго врага - демона"""
 
     def __init__(self, sheets, x, y, width, height):
-        """На вход принимаются sprite sheets, его ширина, его высота,
-         х, y, количество кадров для изменения изображения, высота врага, ширина врага"""
+        """На вход принимаются sprite sheets, х, y, высота врага, ширина врага"""
         # все значения передаются в базовый класс
         super().__init__(sheets, x, y, width, height)
+        self.hp = 800
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'demon'  # названия врага, для взаимодействия с файлами игры
-        self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёdту
+        self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёту
+        self.tactic = None  # тактика атаки
+        self.past_attack = 0  # переменная, чтобы атаки не повторялись слишком часто
+
+    def move(self):
+        """Функция выбирает случайную тактику из возможных и использует ее для атаки"""
+        if self.attacking_count == 0:  # если это первый кадр, то выбирается случайная тактика
+            from random import choice
+            attack = choice([int(x) for x in range(1, 3) if x != self.past_attack])
+            self.past_attack = attack
+            self.tactic = load_tactic(self.enemy_name + '_attack_' + str(attack) + '.txt')
+        try:
+            self.attacking_count += 1  # считаем кадры
+            # если кадр не последний, то успешно создается новая частица
+            im, x, y, vx, vy, ax, ay = self.tactic[self.attacking_count]
+            # добавляется в группы и списки частиц
+            self.particles_list.append(Particle(im, x, y, vx, vy, ax, ay))
+            self.particles.add(self.particles_list[-1])
+        except KeyError:
+            # срабатывает, если по счету нет нужных частиц
+            pass
+        except ValueError:
+            # срабатывает, если сейчас по счёту последний кадр
+            # уничтожаются все спрайты, очищаются списки, тактика и лягушка переходит в ожидание
+            self.attacking_count = 0
+            self.tactic = None
+            self.wait()
+            for part in self.particles_list:
+                part.kill()
+            self.particles_list = []
+
+
+class Cat(AnimatedEnemy):
+    """Класс третьего врага - кота"""
+
+    def __init__(self, sheets, x, y, width, height):
+        """На вход принимаются sprite sheets, х, y, высота врага, ширина врага"""
+        # все значения передаются в базовый класс
+        super().__init__(sheets, x, y, width, height)
+        self.hp = 1200
+        self.particles_list = []  # список атакующих частиц
+        self.enemy_name = 'cat'  # названия врага, для взаимодействия с файлами игры
+        self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёту
         self.tactic = None  # тактика атаки
         self.past_attack = 0  # переменная, чтобы атаки не повторялись слишком часто
 
