@@ -1,0 +1,12 @@
+60;knife_right.png;200;200;0;80;0;1;white
+90;knife_right.png;260;200;0;80;0;1;white
+120;knife_right.png;412;200;0;80;0;1;white
+150;knife_right.png;351;200;0;80;0;1;white
+180;knife_right.png;470;200;0;80;0;1;white
+210;knife_right.png;213;200;0;80;0;1;white
+240;knife_right.png;362;200;0;80;0;1;white
+270;knife_right.png;286;200;0;80;0;1;white
+300;knife_right.png;306;200;0;80;0;1;white
+330;knife_right.png;491;200;0;80;0;1;white
+360;knife_right.png;384;200;0;80;0;1;white
+600;END
