@@ -17,7 +17,7 @@ def load_image(name, colorkey=None):
     image = pygame.image.load(fullname)
     if colorkey is not None:
         image = image.convert()
-        if colorkey == -1 or colorkey == '-1':
+        if colorkey == -1:
             colorkey = image.get_at((0, 0))
         image.set_colorkey(colorkey)
     else:
@@ -288,7 +288,7 @@ class Player(pygame.sprite.Sprite):  # класс игрока
     def take_damage(self, health, invincibility):
         for particle in enemy.particles_list:
             if pygame.sprite.collide_mask(self, particle) and not invincibility:
-                health -= 5
+                health -= enemy.damage
                 hud.hp = health
                 self.invincibility = True
 
@@ -368,6 +368,9 @@ class SpriteSheet:
     def get_rect(self):
         return self.rect
 
+    def get_frames_num(self):
+        return len(self.images) * self.s
+
 
 class Particle(pygame.sprite.Sprite):
     """Класс частиц"""
@@ -412,6 +415,7 @@ class AnimatedEnemy(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (self.width, self.height))  # подстраиваем размер
         self.rect = self.waiting_sheet.get_rect()  # задаем рект
         self.rect = self.rect.move(x, y)
+        self.ending_frames = 0
 
     def update(self):
         self.sheet.update()
@@ -458,18 +462,27 @@ class AnimatedEnemy(pygame.sprite.Sprite):
     def is_attacking(self):
         return True if self.status == 1 else False
 
+    def dying_animation(self):
+        if self.status == 2:
+            self.ending_frames += 1
+            return True if self.ending_frames == self.dying_sheet.get_frames_num() else False
+
+    def get_hit(self, n):
+        self.hp -= n
+
 
 class Frog(AnimatedEnemy):
     """Класс первого врага - лягушки"""
 
     def __init__(self, sheets, x, y, width, height):
-        """На вход принимаются sprite sheets, его ширина, его высота,
-         х, y, количество кадров для изменения изображения, высота врага, ширина врага"""
+        """На вход принимаются sprite sheets, х, y, высота врага, ширина врага"""
         # все значения передаются в базовый класс
         super().__init__(sheets, x, y, width, height)
+        self.hp = 400
+        self.damage = 5
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'frog'  # названия врага, для взаимодействия с файлами игры
-        self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёdту
+        self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёту
         self.tactic = None  # тактика атаки
         self.past_attack = 0  # переменная, чтобы атаки не повторялись слишком часто
 
@@ -509,6 +522,7 @@ class Demon(AnimatedEnemy):
         # все значения передаются в базовый класс
         super().__init__(sheets, x, y, width, height)
         self.hp = 800
+        self.damage = 10
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'demon'  # названия врага, для взаимодействия с файлами игры
         self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёту
@@ -551,6 +565,7 @@ class Cat(AnimatedEnemy):
         # все значения передаются в базовый класс
         super().__init__(sheets, x, y, width, height)
         self.hp = 1200
+        self.damage = 15
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'cat'  # названия врага, для взаимодействия с файлами игры
         self.attacking_count = 0  # подсчёт кадров, чтобы создавать частицы по счёту
@@ -588,7 +603,7 @@ class Cat(AnimatedEnemy):
 if __name__ == '__main__':
     WAITING_FROG = SpriteSheet(load_image('waiting_frog.png', colorkey=-1), 14, 1, 10)
     ATTACKING_FROG = SpriteSheet(load_image('attacking_frog.png', colorkey=-1), 14, 1, 10)
-    DYING_FROG = SpriteSheet(load_image('attacking_frog.png', colorkey=-1), 14, 1, 10)
+    DYING_FROG = SpriteSheet(load_image('dying_frog.png', colorkey=-1), 14, 1, 10)
     WAITING_DEMON = SpriteSheet(load_image('waiting_demon.png', colorkey=-1), 6, 1, 6)
     ATTACKING_DEMON = SpriteSheet(load_image('attacking_demon.png', colorkey=-1), 15, 1, 6)
     DYING_DEMON = SpriteSheet(load_image('dying_demon.png', colorkey=-1), 22, 1, 6)
@@ -631,7 +646,7 @@ if __name__ == '__main__':
                 if event.button == 2:
                     enemy.attack()
                 if event.button == 3:
-                    enemy.die()
+                    enemy.get_hit(100)
             if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_a, pygame.K_LEFT):
                     key_a = True
@@ -664,6 +679,10 @@ if __name__ == '__main__':
             player.move_down()
         if hud.hp <= 0:
             terminate()
+        if enemy.hp <= 0:
+            enemy.die()
+            if enemy.dying_animation():
+                terminate()
         hud.draw_all()
         all_sprites.draw(screen)
         all_sprites.update()
