@@ -400,6 +400,33 @@ class Particle(pygame.sprite.Sprite):
         self.rect.x, self.rect.y = int(self.x), int(self.y)
 
 
+class HealthStripe(pygame.sprite.Sprite):
+    def __init__(self, max_health, rn_health, bf_health):
+        super().__init__(all_sprites)
+        self.max_health, self.rn_health, self.bf_health = max_health, rn_health, bf_health
+        self.start = int(bf_health / max_health * 200)
+        self.end = int(rn_health / max_health * 200) if int(rn_health / max_health * 200) > 0 else 0
+        self.rn = self.start
+        self.move = (self.start - self.end) / 60
+        self.steps = 150
+        self.image = pygame.Surface([200, 40])
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = 300, 50
+        self.image.fill('yellow')
+        pygame.draw.rect(self.image, 'red', (int(self.rn), 0, 200, 40))
+
+    def update(self):
+        if 60 <= self.steps <= 120:
+            self.rn -= self.move
+            if self.rn < 0:
+                self.rn = 0
+            self.image.fill('yellow')
+            pygame.draw.rect(self.image, 'red', (int(self.rn), 0, 200, 40))
+        self.steps -= 1
+        if self.steps == 0:
+            self.kill()
+
+
 class AnimatedEnemy(pygame.sprite.Sprite):
     """Базовый класс для всех врагов"""
 
@@ -424,6 +451,7 @@ class AnimatedEnemy(pygame.sprite.Sprite):
         self.ending_frames = 0
         self.ending_frames_sum = self.dying_sheet.get_frames_num() + 180
         self.dying_sheet_frames_num = self.dying_sheet.get_frames_num()
+        self.health = 0
 
     def update(self):
         self.sheet.update()
@@ -498,6 +526,8 @@ class AnimatedEnemy(pygame.sprite.Sprite):
                 return False
 
     def get_hit(self, n):
+        if self.hp - n > 0:
+            HealthStripe(self.max_hp, self.hp - n, self.hp)
         self.hp -= n
 
 
@@ -508,7 +538,7 @@ class Frog(AnimatedEnemy):
         """На вход принимаются sprite sheets, х, y, высота врага, ширина врага"""
         # все значения передаются в базовый класс
         super().__init__(sheets, x, y, width, height)
-        self.hp = 400
+        self.max_hp = self.hp = 400
         self.damage = 5
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'frog'  # названия врага, для взаимодействия с файлами игры
@@ -552,7 +582,7 @@ class Demon(AnimatedEnemy):
         """На вход принимаются sprite sheets, х, y, высота врага, ширина врага"""
         # все значения передаются в базовый класс
         super().__init__(sheets, x, y, width, height)
-        self.hp = 800
+        self.max_hp = self.hp = 800
         self.damage = 10
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'demon'  # названия врага, для взаимодействия с файлами игры
@@ -596,7 +626,7 @@ class Cat(AnimatedEnemy):
         """На вход принимаются sprite sheets, х, y, высота врага, ширина врага"""
         # все значения передаются в базовый класс
         super().__init__(sheets, x, y, width, height)
-        self.hp = 1200
+        self.max_hp = self.hp = 1200
         self.damage = 15
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'cat'  # названия врага, для взаимодействия с файлами игры
