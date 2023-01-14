@@ -256,6 +256,7 @@ class Player(pygame.sprite.Sprite):  # класс игрока
                 health -= enemy.damage
                 hud.hp = health
                 self.invincibility = True
+                break
 
     # функция атаки противника
     def attack(self):
