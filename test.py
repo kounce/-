@@ -1,5 +1,7 @@
-import sys
+import math
 import os
+import sys
+
 import pygame
 
 pygame.init()
@@ -7,6 +9,12 @@ size = width, height = 800, 600
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Путь к славе')
 invincibility_color = [pygame.Color('orange'), pygame.Color('purple')]
+all_sprites = pygame.sprite.Group()
+horizontal_borders = pygame.sprite.Group()
+vertical_borders = pygame.sprite.Group()
+clock = pygame.time.Clock()
+fps = 60
+swap = True
 
 
 def load_image(name, colorkey=None):
@@ -31,37 +39,86 @@ def terminate():  # функция для выхода на любом экра�
 
 
 def start_screen():  # стартовый экран
-    font = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
-    string_title_rendered = font.render('Path to GLORY', 1, pygame.Color('white'))
+    font_en = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
+    # название игры
+    string_title_rendered = font_en.render('Path to GLORY', 1, pygame.Color('white'))
     intro_title_rect = string_title_rendered.get_rect()
     intro_title_rect.top = 100
     intro_title_rect.x = 230
     screen.blit(string_title_rendered, intro_title_rect)
-    color = 'white'  # цвет для кнопки
+    color_guide = 'white'  # цвет для кнопки guide
+    # кнопка с руководством по управлению
+    string_guide_render = font_en.render('GUIDE', 1, pygame.Color(color_guide))
+    intro_guide_rect = string_guide_render.get_rect()
+    intro_guide_rect.top = 450
+    intro_guide_rect.x = 370
+    color_start = 'white'  # цвет для кнопки start
     # кнопка старт
-    string_start_rendered = font.render('START', 1, pygame.Color(color))
+    string_start_rendered = font_en.render('START', 1, pygame.Color(color_start))
     intro_start_rect = string_start_rendered.get_rect()
     intro_start_rect.top = 400
     intro_start_rect.x = 320
+    hide = False
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
             # проверка, что курсор находится на кнопке или нет
-            elif event.type == pygame.MOUSEMOTION and intro_start_rect.collidepoint(event.pos):
-                color = 'yellow'
-            elif event.type == pygame.MOUSEMOTION and not intro_start_rect.collidepoint(event.pos):
-                color = 'white'
-            # проверка, что игрок нажал именно на кнопку "start"
-            if event.type == pygame.MOUSEBUTTONDOWN and intro_start_rect.collidepoint(event.pos):
-                return  # начало игры
-        string_start_rendered = font.render('START', 1, pygame.Color(color))
+            elif event.type == pygame.MOUSEMOTION:
+                if intro_start_rect.collidepoint(event.pos):
+                    color_start = 'yellow'
+                if intro_guide_rect.collidepoint(event.pos):
+                    color_guide = 'yellow'
+                if not intro_start_rect.collidepoint(event.pos):
+                    color_start = 'white'
+                if not intro_guide_rect.collidepoint(event.pos):
+                    color_guide = 'white'
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if intro_start_rect.collidepoint(event.pos):  # проверка, что игрок нажал на кнопку start
+                    return  # начало игры
+                if intro_guide_rect.collidepoint(event.pos):  # проверка, что игрок нажал на кнопку guide:
+                    guide_screen(hide)
+                    hide = not hide
+        string_start_rendered = font_en.render('START', 1, pygame.Color(color_start))
         intro_start_rect = string_start_rendered.get_rect()
         intro_start_rect.top = 400
         intro_start_rect.x = 320
         screen.blit(string_start_rendered, intro_start_rect)
+        string_guide_render = font_en.render('GUIDE', 1, pygame.Color(color_guide))
+        intro_guide_rect = string_guide_render.get_rect()
+        intro_guide_rect.top = 450
+        intro_guide_rect.x = 330
+        screen.blit(string_guide_render, intro_guide_rect)
         pygame.display.flip()
         clock.tick(fps)
+
+
+def guide_screen(hide):
+    if not hide:
+        image = load_image('controls.png')
+        image_rect = image.get_rect()
+        screen.blit(image, (230, 220))
+        font_ru = pygame.font.Font('data/game_font.otf', 30)
+        string_control_render = font_ru.render('Передвижение', 1, pygame.Color('white'))
+        intro_control_rect = string_control_render.get_rect()
+        intro_control_rect.top = 190
+        intro_control_rect.x = 275
+        screen.blit(string_control_render, intro_control_rect)
+        string_esc_render = font_ru.render('ESC - сбежать с боя', 1, pygame.Color('white'))
+        intro_esc_rect = string_esc_render.get_rect()
+        intro_esc_rect.top = 330
+        intro_esc_rect.x = 240
+        screen.blit(string_esc_render, intro_esc_rect)
+        string_space_render = font_ru.render('SPACE - остановить полоску на скиллчеке', 1, pygame.Color('white'))
+        intro_space_rect = string_space_render.get_rect()
+        intro_space_rect.top = 360
+        intro_space_rect.x = 50
+        screen.blit(string_space_render, intro_space_rect)
+    else:
+        black_image = pygame.Surface((800, 300))
+        black_image_rect = black_image.get_rect()
+        black_image.fill((0, 0, 0))
+        screen.blit(black_image, (50, 180))
 
 
 def fighting_menu():
@@ -153,67 +210,29 @@ def fighting_menu():
 
 
 class HUD:
-    def __init__(self, name, lvl, hp):
+    def __init__(self, hp):
         super().__init__()
-        self.name = name
-        self.lvl = lvl
         self.hp = hp
-        self.screen = pygame.Surface((800, 600))
+        self.screen = pygame.Surface((800, 135))
         self.font = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
         self.check_turn = False
         # установка цвета для отрисовки кнопок, чтобы игрок понял, на какой кнопке находится(во время своего хода)
         self.color = 'orange'
 
-    def draw_name(self):  # отрисовка имени
-        string_rendered = self.font.render(self.name, 1, pygame.Color('white'))
-        intro_rect = string_rendered.get_rect()
-        intro_rect.top = 490
-        intro_rect.x = 0
-        screen.blit(string_rendered, intro_rect)
-
-    def draw_lvl(self):  # отрисовка уровня
-        string_rendered = self.font.render('LV ' + self.lvl, 1, pygame.Color('white'))
-        intro_rect = string_rendered.get_rect()
-        intro_rect.top = 490
-        intro_rect.x = 120
-        screen.blit(string_rendered, intro_rect)
-
     def draw_hp(self):  # отрисовка хп
         font = pygame.font.Font('data/MonsterFriend2Fore.otf', 25)
         string_rendered = font.render('HP', 1, pygame.Color('white'))
         intro_rect = string_rendered.get_rect()
-        intro_rect.top = 492
-        intro_rect.x = 250
+        intro_rect.top = 522
+        intro_rect.x = 50
         screen.blit(string_rendered, intro_rect)
-        pygame.draw.rect(self.screen, pygame.Color('yellow'), (310, 485, self.hp * 2, 35))
+        pygame.draw.rect(self.screen, pygame.Color('yellow'), (120, 30, self.hp * 4, 35))
         pygame.draw.rect(self.screen, pygame.Color('red'),
-                         (510 - abs(self.hp - 100) * 2, 485, abs(self.hp - 100) * 2, 35))
-
-    def draw_fight_button(self):  # отрисовка кнопки файт
-        pygame.draw.rect(self.screen, pygame.Color(self.color), (0, 530, 150, 70), 5)
-        font = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
-        string_rendered = font.render('FIGHT', 1, pygame.Color(self.color))
-        intro_rect = string_rendered.get_rect()
-        intro_rect.top = 553
-        intro_rect.x = 7
-        screen.blit(string_rendered, intro_rect)
-
-    def draw_escape_button(self):  # отрисовка кнопки сбежать
-        pygame.draw.rect(self.screen, pygame.Color(self.color), (640, 530, 160, 70), 5)
-        font = pygame.font.Font('data/MonsterFriend2Fore.otf', 25)
-        string_rendered = font.render('ESCAPE', 1, pygame.Color(self.color))
-        intro_rect = string_rendered.get_rect()
-        intro_rect.top = 553
-        intro_rect.x = 647
-        screen.blit(string_rendered, intro_rect)
+                         (520 - abs(self.hp - 100) * 4, 30, abs(self.hp - 100) * 4, 35))
 
     def draw_all(self):  # отрисовка всего, что будет на экране
-        screen.blit(self.screen, (0, 0))
-        self.draw_name()
-        self.draw_lvl()
+        screen.blit(self.screen, (0, 485))
         self.draw_hp()
-        self.draw_fight_button()
-        self.draw_escape_button()
 
 
 class Border(pygame.sprite.Sprite):  # класс для стенок поля
@@ -232,17 +251,6 @@ class Border(pygame.sprite.Sprite):  # класс для стенок поля
             self.image.fill((255, 255, 255))
             self.rect = pygame.Rect(x1, y1, x2 - x1, 5)
 
-    def update_field(self, x1, y1, x2, y2):
-        # изменение значений поля
-        if x1 == x2:
-            self.image = pygame.Surface((5, y2 - y1))
-            self.image.fill((255, 255, 255))
-            self.rect = pygame.Rect(x1, y1, 5, y2 - y1)
-        else:
-            self.image = pygame.Surface((x2 - x1, 5))
-            self.image.fill((255, 255, 255))
-            self.rect = pygame.Rect(x1, y1, x2 - x1, 5)
-
 
 class Player(pygame.sprite.Sprite):  # класс игрока
     def __init__(self):
@@ -251,13 +259,19 @@ class Player(pygame.sprite.Sprite):  # класс игрока
         self.image = pygame.Surface((15, 15))
         self.image.fill(pygame.Color('orange'))
         self.rect = self.image.get_rect()
-        self.rect.x = 380
-        self.rect.y = 427
+        self.rect.x = 393
+        self.rect.y = 355
         self.invincibility = False
         # таймер для неуязвимости игрока после получения урона
         self.timer = 0
+        # пауза для скиллчека, когда останавливается полоска и игрок увидел где остановилась полоска + сколько снял хп
+        self.pause = 0
         # переменная, чтобы узнать прошло ли время, чтобы сменить цвет игрока во время неуязвимости
         self.change_color = 0
+        # переменная
+        self.do_damage = False
+        # переменная
+        self.wait = True
 
     # функции передвижения
     def move_right(self):
@@ -291,8 +305,17 @@ class Player(pygame.sprite.Sprite):  # класс игрока
                 health -= enemy.damage
                 hud.hp = health
                 self.invincibility = True
+                break
+
+    # функция атаки противника
+    def attack(self):
+        damage = int(80 + 50 * (1 - math.fabs(skillcheck.rect.x - 385) / 400))
+        enemy.get_hit(damage)
+        self.do_damage = True
+        self.set_back()
 
     def update(self):
+        global swap
         if self.invincibility:
             self.timer += 1
             self.image.fill(invincibility_color[1])
@@ -304,6 +327,20 @@ class Player(pygame.sprite.Sprite):  # класс игрока
         if self.timer == self.change_color + 15:
             self.change_color += 15
             invincibility_color.reverse()
+        if self.do_damage:
+            self.pause += 1
+            if self.pause == 150:
+                player.image.fill(pygame.Color('orange'))
+                all_sprites.remove(skillcheck)
+                swap = not swap
+                enemy.attack()
+                all_sprites.add(player)
+                self.pause = 0
+                self.do_damage = False
+
+    def set_back(self):
+        self.rect.x = 393
+        self.rect.y = 355
 
 
 def load_tactic(file_name):
@@ -400,6 +437,33 @@ class Particle(pygame.sprite.Sprite):
         self.rect.x, self.rect.y = int(self.x), int(self.y)
 
 
+class HealthStripe(pygame.sprite.Sprite):
+    def __init__(self, max_health, rn_health, bf_health):
+        super().__init__(all_sprites)
+        self.max_health, self.rn_health, self.bf_health = max_health, rn_health, bf_health
+        self.start = int(bf_health / max_health * 200)
+        self.end = int(rn_health / max_health * 200) if int(rn_health / max_health * 200) > 0 else 0
+        self.rn = self.start
+        self.move = (self.start - self.end) / 60
+        self.steps = 150
+        self.image = pygame.Surface([200, 40])
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = 300, 50
+        self.image.fill('yellow')
+        pygame.draw.rect(self.image, 'red', (int(self.rn), 0, 200, 40))
+
+    def update(self):
+        if 60 <= self.steps <= 120:
+            self.rn -= self.move
+            if self.rn < 0:
+                self.rn = 0
+            self.image.fill('yellow')
+            pygame.draw.rect(self.image, 'red', (int(self.rn), 0, 200, 40))
+        self.steps -= 1
+        if self.steps == 0:
+            self.kill()
+
+
 class AnimatedEnemy(pygame.sprite.Sprite):
     """Базовый класс для всех врагов"""
 
@@ -424,6 +488,7 @@ class AnimatedEnemy(pygame.sprite.Sprite):
         self.ending_frames = 0
         self.ending_frames_sum = self.dying_sheet.get_frames_num() + 180
         self.dying_sheet_frames_num = self.dying_sheet.get_frames_num()
+        self.health = 0
 
     def update(self):
         self.sheet.update()
@@ -462,7 +527,10 @@ class AnimatedEnemy(pygame.sprite.Sprite):
         self.status = 1
 
     def wait(self):
+        global skillcheck
         self.status = 0
+        skillcheck = SkillCheck()
+        skillcheck.swap_sides(swap)
 
     def die(self):
         self.status = 2
@@ -480,24 +548,15 @@ class AnimatedEnemy(pygame.sprite.Sprite):
                 sprite = pygame.sprite.Sprite(all_sprites)
                 sprite.image = ending_text
                 sprite.rect = ending_text.get_rect()
-                with open('data/enemies_completed.txt', 'r', newline='') as file2:
-                    data = file2.readlines()
-                    data = [int(x.strip()) for x in data]
-                    file2.close()
-                com1, com2, com3 = data
-                sprite.rect.x, sprite.rect.y = 400 - sprite.rect.width // 2, 100
-                with open('data/enemies_completed.txt', 'w', newline='') as file1:
-                    if self.type == 'Frog':
-                        file1.write(f'1\n1\n{com3}')
-                    if self.type == 'Demon':
-                        file1.write(f'1\n{com2}\n1')
-                    file1.close()
+                sprite.rect.x, sprite.rect.y = 400 - (sprite.rect.width // 2), (210 - sprite.rect.height) // 2
             if self.ending_frames == self.ending_frames_sum:
                 return True
             else:
                 return False
 
     def get_hit(self, n):
+        if self.hp - n > 0:
+            HealthStripe(self.max_hp, self.hp - n, self.hp)
         self.hp -= n
 
 
@@ -508,7 +567,7 @@ class Frog(AnimatedEnemy):
         """На вход принимаются sprite sheets, х, y, высота врага, ширина врага"""
         # все значения передаются в базовый класс
         super().__init__(sheets, x, y, width, height)
-        self.hp = 400
+        self.max_hp = self.hp = 400
         self.damage = 5
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'frog'  # названия врага, для взаимодействия с файлами игры
@@ -552,7 +611,7 @@ class Demon(AnimatedEnemy):
         """На вход принимаются sprite sheets, х, y, высота врага, ширина врага"""
         # все значения передаются в базовый класс
         super().__init__(sheets, x, y, width, height)
-        self.hp = 800
+        self.max_hp = self.hp = 800
         self.damage = 10
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'demon'  # названия врага, для взаимодействия с файлами игры
@@ -564,10 +623,28 @@ class Demon(AnimatedEnemy):
     def move(self):
         """Функция выбирает случайную тактику из возможных и использует ее для атаки"""
         if self.attacking_count == 0:  # если это первый кадр, то выбирается случайная тактика
-            from random import choice
-            attack = choice([int(x) for x in range(1, 9) if x != self.past_attack])
+            from random import choice, randint
+            attack = choice([int(x) for x in range(1, 7) if x != self.past_attack])
             self.past_attack = attack
-            self.tactic = load_tactic(self.enemy_name + '_attack_' + str(attack) + '.txt')
+            if attack > 4:
+                self.tactic = {}
+                for i in range(1, 51):
+                    w = randint(1, 4)
+                    if w == 1:
+                        self.tactic[60 + i * 20] = [load_image('fireball.png', colorkey='white'),
+                                                    100, randint(250, 450), 70, 0, 2, 0]
+                    if w == 2:
+                        self.tactic[60 + i * 20] = [load_image('fireball.png', colorkey='white'),
+                                                    randint(200, 580), 120, 0, 70, 0, 2]
+                    if w == 3:
+                        self.tactic[60 + i * 20] = [load_image('fireball.png', colorkey='white'),
+                                                    680, randint(250, 450), -70, 0, -2, 0]
+                    if w == 4:
+                        self.tactic[60 + i * 20] = [load_image('fireball.png', colorkey='white'),
+                                                    randint(200, 580), 550, 0, -70, 0, -2]
+                    self.tactic[1300] = 'END'
+            else:
+                self.tactic = load_tactic(self.enemy_name + '_attack_' + str(attack) + '.txt')
         try:
             self.attacking_count += 1  # считаем кадры
             # если кадр не последний, то успешно создается новая частица
@@ -596,7 +673,7 @@ class Cat(AnimatedEnemy):
         """На вход принимаются sprite sheets, х, y, высота врага, ширина врага"""
         # все значения передаются в базовый класс
         super().__init__(sheets, x, y, width, height)
-        self.hp = 1200
+        self.max_hp = self.hp = 1200
         self.damage = 15
         self.particles_list = []  # список атакующих частиц
         self.enemy_name = 'cat'  # названия врага, для взаимодействия с файлами игры
@@ -608,10 +685,97 @@ class Cat(AnimatedEnemy):
     def move(self):
         """Функция выбирает случайную тактику из возможных и использует ее для атаки"""
         if self.attacking_count == 0:  # если это первый кадр, то выбирается случайная тактика
-            from random import choice
-            attack = choice([int(x) for x in range(1, 3) if x != self.past_attack])
+            from random import choice, randint
+            attack = choice([int(x) for x in range(1, 6) if x != self.past_attack])
             self.past_attack = attack
-            self.tactic = load_tactic(self.enemy_name + '_attack_' + str(attack) + '.txt')
+            if attack == 1:
+                self.tactic = {}
+                for i in range(1, 51):
+                    w = randint(1, 4)
+                    c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                    if w == 1:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    100, randint(250, 440), 70, 0, 4, 0]
+                    if w == 2:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    randint(200, 570), 120, 0, 70, 0, 4]
+                    if w == 3:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    680, randint(250, 440), -70, 0, -4, 0]
+                    if w == 4:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    randint(200, 570), 550, 0, -70, 0, -4]
+                self.tactic[250 + 50 * 10] = 'END'
+            elif attack == 2:
+                self.tactic = {}
+                self.tactic[1] = [load_image(f'leftcatwall.png'),
+                                  200, 250, 0, 0, 0, 0]
+                self.tactic[2] = [load_image(f'rightcatwall.png'),
+                                  455, 250, 0, 0, 0, 0]
+                s = 0
+                for i in range(1, 21):
+                    w = choice([int(x) for x in range(1, 4) if x != s])
+                    c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                    if w == 1:
+                        self.tactic[60 + i * 30] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    350, 100, 0, 80, 0, 2]
+                    if w == 2:
+                        self.tactic[60 + i * 30] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    385, 100, 0, 80, 0, 2]
+                    if w == 3:
+                        self.tactic[60 + i * 30] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    420, 100, 0, 80, 0, 2]
+                    s = w
+                self.tactic[830] = 'END'
+            elif attack == 3:
+                self.tactic = {}
+                for i in range(1, 61):
+                    w = randint(1, 2)
+                    c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                    if w == 1:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    20, 440, randint(40, 180), -300, 0, 3]
+                    if w == 2:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    750, 440, -randint(40, 180), -300, 0, 3]
+                self.tactic[360 + 60 * 10] = 'END'
+            elif attack == 4:
+                self.tactic = {}
+                self.tactic[1] = [load_image(f'waves.png', colorkey=(3, 3, 3)),
+                                  800, 250, -200, 0, 0, 0]
+                for i in range(1, 61):
+                    w = randint(1, 2)
+                    c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                    if w == 1:
+                        self.tactic[60 + i * 30] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    randint(200, 570), 120, 0, 80, 0, 3]
+                    if w == 2:
+                        self.tactic[60 + i * 30] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    randint(200, 570), 800, 0, -80, 0, -3]
+                self.tactic[360 + 60 * 30] = 'END'
+            elif attack == 5:
+                self.tactic = {}
+                player.rect.x = 500
+                player.rect.y = 325
+                self.tactic[1] = [load_image(f'cotton_red_ball.png', colorkey='black'),
+                                  385, 345, 0, 0, 0, 0]
+                self.tactic[2] = [load_image(f'square_borders.png', colorkey='black'),
+                                  202, 252, 0, 0, 0, 0]
+                y_r = [1, 0.8, 0.6, 0.4, 0.2, 0, -0.2, -0.4, -0.6, -0.8, -1]
+                y = sorted(y_r)[1:]
+                x_r = [0, 0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0]
+                x = [-e for e in x_r][1:]
+                for i in range(3):
+                    for j in range(11):
+                        c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                        self.tactic[i * 20 * 10 + j * 10 + 60] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                                  385, 345, 80 * x_r[j], 80 * y_r[j], 0, 0]
+                    for j in range(9):
+                        c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                        self.tactic[i * 20 * 10 +
+                                    (j + 11) * 10 + 60] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                           385, 345, 80 * x[j], 80 * y[j], 0, 0]
+                self.tactic[60 * 10 + 260] = 'END'
         try:
             self.attacking_count += 1  # считаем кадры
             # если кадр не последний, то успешно создается новая частица
@@ -633,53 +797,180 @@ class Cat(AnimatedEnemy):
             self.particles_list = []
 
 
-if __name__ == '__main__':
-    WAITING_FROG = SpriteSheet(load_image('waiting_frog.png', colorkey=-1), 14, 1, 10)
-    ATTACKING_FROG = SpriteSheet(load_image('attacking_frog.png', colorkey=-1), 14, 1, 10)
-    DYING_FROG = SpriteSheet(load_image('dying_frog.png', colorkey=-1), 14, 1, 10)
-    WAITING_DEMON = SpriteSheet(load_image('waiting_demon.png', colorkey=-1), 6, 1, 6)
-    ATTACKING_DEMON = SpriteSheet(load_image('attacking_demon.png', colorkey=-1), 15, 1, 6)
-    DYING_DEMON = SpriteSheet(load_image('dying_demon.png', colorkey=-1), 22, 1, 6)
-    all_sprites = pygame.sprite.Group()
-    horizontal_borders = pygame.sprite.Group()
-    vertical_borders = pygame.sprite.Group()
-    hp = 100
-    name = 'KIRA'
-    lvl = '1'
-    hud = HUD(name, lvl, hp)
-    border_top = Border(200, 250, 600, 250)
-    border_bottom = Border(200, 470, 600, 470)
-    border_left = Border(200, 250, 200, 470)
-    border_right = Border(600, 250, 600, 470)
-    key_a = False
-    key_d = False
-    key_w = False
-    key_s = False
-    clock = pygame.time.Clock()
-    fps = 60
-    start_screen()
-    chosen_enemy = fighting_menu()
-    if chosen_enemy == 0:
-        enemy = Frog([WAITING_FROG,
-                      ATTACKING_FROG,
-                      DYING_FROG], 320, 150, 160, 100)
-    elif chosen_enemy == 1:
-        enemy = Demon([WAITING_DEMON,
-                       ATTACKING_DEMON,
-                       DYING_DEMON], 200, 28, 400, 222)
-    player = Player()
+class SkillCheck(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.image = pygame.Surface((20, 200))
+        self.image.fill((255, 255, 255))
+        self.rect = self.image.get_rect()
+        self.rect.x = -15
+        self.rect.y = 262
+        self.left_to_right = True
+
+    def draw_skillcheck(self):
+        pygame.draw.ellipse(screen, (190, 245, 116), (5, 255, 790, 215), 10)
+        # красный левый сегмент
+        pygame.draw.line(screen, pygame.Color('red'), (73, 311), (73, 413), 3)
+        pygame.draw.line(screen, pygame.Color('red'), (93, 331), (113, 331), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (137, 331), (157, 331), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (182, 331), (202, 331), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (113, 361), (133, 361), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (157, 361), (177, 361), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (93, 393), (113, 393), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (137, 393), (157, 393), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (182, 393), (202, 393), 4)
+        # красный правый сегмент
+        pygame.draw.line(screen, pygame.Color('red'), (726, 311), (726, 413), 3)
+        pygame.draw.line(screen, pygame.Color('red'), (706, 331), (687, 331), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (662, 331), (642, 331), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (596, 331), (616, 331), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (686, 361), (666, 361), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (642, 361), (622, 361), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (706, 393), (686, 393), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (662, 393), (642, 393), 4)
+        pygame.draw.line(screen, pygame.Color('red'), (616, 393), (596, 393), 4)
+        # желтый левый сегмент
+        pygame.draw.line(screen, pygame.Color('yellow'), (222, 276), (222, 448), 8)
+        pygame.draw.line(screen, pygame.Color('yellow'), (242, 306), (252, 306), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (252, 334), (272, 334), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (252, 362), (272, 362), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (252, 390), (272, 390), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (242, 418), (252, 418), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (296, 306), (306, 306), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (306, 334), (326, 334), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (306, 362), (326, 362), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (306, 390), (326, 390), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (296, 418), (306, 418), 4)
+        # желтый правый сегмент
+        pygame.draw.line(screen, pygame.Color('yellow'), (576, 276), (576, 448), 8)
+        pygame.draw.line(screen, pygame.Color('yellow'), (556, 306), (546, 306), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (546, 334), (526, 334), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (546, 362), (526, 362), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (546, 390), (526, 390), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (556, 418), (546, 418), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (502, 306), (492, 306), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (492, 334), (472, 334), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (492, 362), (472, 362), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (492, 390), (472, 390), 4)
+        pygame.draw.line(screen, pygame.Color('yellow'), (502, 418), (492, 418), 4)
+        # зеленый
+        pygame.draw.line(screen, (190, 245, 116), (356, 266), (356, 458), 10)
+        pygame.draw.line(screen, (0, 153, 0), (366, 270), (366, 454), 10)
+        pygame.draw.line(screen, (0, 153, 0), (366, 272), (432, 272), 10)
+        pygame.draw.line(screen, (0, 153, 0), (366, 452), (432, 452), 10)
+        pygame.draw.line(screen, (0, 153, 0), (432, 270), (432, 454), 10)
+        pygame.draw.line(screen, (190, 245, 116), (442, 266), (442, 458), 10)
+
+    def move_left_to_right(self):
+        self.rect = self.rect.move(5, 0)
+
+    def move_right_to_left(self):
+        self.rect = self.rect.move(-5, 0)
+
+    def swap_sides(self, swap):
+        self.left_to_right = swap
+        if self.left_to_right:
+            self.rect.x = -15
+        else:
+            self.rect.x = 795
+
+
+def escape_screen():
+    font = pygame.font.Font('data/MonsterFriend2Fore.otf', 40)
+    escaping_text = font.render('you ran away...', 1, pygame.Color('white'))
+    rect = escaping_text.get_rect()
+    rect.x, rect.y = 400 - (rect.width // 2), 300 - (rect.height // 2)
+    sc = 300
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    enemy.wait()
-                if event.button == 2:
-                    enemy.attack()
-                if event.button == 3:
-                    enemy.get_hit(100)
+        screen.fill('black')
+        screen.blit(escaping_text, rect)
+        if sc == 0:
+            running = False
+        sc -= 1
+        pygame.display.flip()
+        clock.tick(fps)
+
+
+def player_lost_screen():
+    font = pygame.font.Font('data/MonsterFriend2Fore.otf', 40)
+    loosing_text = font.render('you died...', 1, pygame.Color('red'))
+    rect = loosing_text.get_rect()
+    rect.x, rect.y = 400 - (rect.width // 2), 300 - (rect.height // 2)
+    sc = 300
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+        screen.fill('black')
+        screen.blit(loosing_text, rect)
+        if sc == 0:
+            running = False
+        sc -= 1
+        pygame.display.flip()
+        clock.tick(fps)
+
+
+def unlocking_new_enemy_screen():
+    font = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
+    unlock_text = font.render('you unlocked new enemy!', 1, pygame.Color('yellow'))
+    rect = unlock_text.get_rect()
+    rect.x, rect.y = 400 - (rect.width // 2), 300 - (rect.height // 2)
+    sc = 300
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+        screen.fill('black')
+        screen.blit(unlock_text, rect)
+        if sc == 0:
+            running = False
+        sc -= 1
+        pygame.display.flip()
+        clock.tick(fps)
+
+
+def game_completed_screen():
+    font_c = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
+    font_t = pygame.font.Font('data/MonsterFriend2Fore.otf', 20)
+    complete_text = font_c.render('you completed the game!', 1, pygame.Color('white'))
+    thanks_text = font_t.render('thank you for playing', 1, pygame.Color('white'))
+    rect_c = complete_text.get_rect()
+    rect_c.x, rect_c.y = 400 - (rect_c.width // 2), 300 - (rect_c.height // 2)
+    rect_t = thanks_text.get_rect()
+    rect_t.x, rect_t.y = 400 - (rect_t.width // 2), 330 - (rect_t.height // 2)
+    sc = 500
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+        screen.fill('black')
+        screen.blit(complete_text, rect_c)
+        screen.blit(thanks_text, rect_t)
+        if sc == 0:
+            running = False
+        sc -= 1
+        pygame.display.flip()
+        clock.tick(fps)
+
+
+def battle_screen():
+    result = False
+    key_a = False
+    key_d = False
+    key_w = False
+    key_s = False
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_a, pygame.K_LEFT):
                     key_a = True
@@ -689,6 +980,11 @@ if __name__ == '__main__':
                     key_w = True
                 if event.key in (pygame.K_s, pygame.K_DOWN):
                     key_s = True
+                if event.key == pygame.K_SPACE and enemy.status == 0:
+                    player.attack()
+                if event.key == pygame.K_ESCAPE:
+                    result = 'escaped'
+                    running = False
             if event.type == pygame.KEYUP:
                 if event.key in (pygame.K_a, pygame.K_LEFT):
                     key_a = False
@@ -711,25 +1007,120 @@ if __name__ == '__main__':
         if key_s:
             player.move_down()
         if hud.hp <= 0:
-            terminate()
+            result = 'died'
+            running = False
         if enemy.hp <= 0:
+            skillcheck.kill()
             enemy.die()
             if enemy.dying_animation():
-                terminate()
+                with open('data/enemies_completed.txt', 'r', newline='') as file2:
+                    data = file2.readlines()
+                    data = [int(x.strip()) for x in data]
+                    file2.close()
+                com1, com2, com3 = data
+                with open('data/enemies_completed.txt', 'w', newline='') as file1:
+                    if enemy.type == 'Frog':
+                        if not com2:
+                            result = 'won_un'
+                        file1.write(f'1\n1\n{com3}')
+                    elif enemy.type == 'Demon':
+                        if not com3:
+                            result = 'won_un'
+                        file1.write(f'1\n{com2}\n1')
+                    else:
+                        result = 'completed'
+                        file1.write(f'1\n1\n1')
+                    file1.close()
+                running = False
+        if enemy.status == 0:
+            all_sprites.remove(border_top_fight)
+            all_sprites.remove(border_bottom_fight)
+            all_sprites.remove(border_left_fight)
+            all_sprites.remove(border_right_fight)
+            all_sprites.add(border_top)
+            all_sprites.add(border_bottom)
+            all_sprites.add(border_left)
+            all_sprites.add(border_right)
+            all_sprites.remove(player)
+            player.update()
+            skillcheck.draw_skillcheck()
+            if skillcheck.left_to_right and skillcheck.rect.x <= 775 and not player.do_damage:
+                skillcheck.move_left_to_right()
+                if skillcheck.rect.x == 780:
+                    player.attack()
+            elif not skillcheck.left_to_right and skillcheck.rect.x >= 5 and not player.do_damage:
+                skillcheck.move_right_to_left()
+                if skillcheck.rect.x == 0:
+                    player.attack()
+        if enemy.status == 1:
+            all_sprites.add(border_top_fight)
+            all_sprites.add(border_bottom_fight)
+            all_sprites.add(border_left_fight)
+            all_sprites.add(border_right_fight)
+            all_sprites.remove(border_top)
+            all_sprites.remove(border_bottom)
+            all_sprites.remove(border_left)
+            all_sprites.remove(border_right)
         hud.draw_all()
         all_sprites.draw(screen)
         all_sprites.update()
         pygame.display.flip()
         clock.tick(fps)
-'''
-деление на 2 нужно, чтобы квадрат был примерно по центру окна
-((ширина окна - ширина кв.) // 2), (верхняя точка кв.), (ширина окна - ширина кв.) // 2 + ширина кв., верхняя точка кв.)
-((ширина окна - ширина кв.) // 2, нижняя точка кв., (ширина окна - ширина кв.) // 2 + ширина кв., нижняя точка кв.)
-((ширина окна - ширина кв.) // 2, верхняя точка кв., (ширина окна - ширина кв.) // 2, нижняя точка.кв)
-((ширина окна - ширина кв) // 2 + (ширина кв. - толщина линий), верхняя точка кв., (ширина окна - ширина кв) // 2 + (ширина кв. - толщина линий), нижняя точка кв.)
-border_top.update_field((width - 400) // 2, 250, (width - 400) // 2 + 400, 250)
-border_bottom.update_field((width - 400) // 2, 470, (width - 400) // 2 + 400, 470)
-border_left.update_field((width - 400) // 2, 250, (width - 400) // 2, 470)
-border_right.update_field((width - 400) // 2 + (400 - 5), 250, (width - 400) // 2 + (400 - 5), 470)
-можно применять мою формулу(только когда ширина кв. не равна ширине окна), или вручную подбирать размеры
-'''
+    return result
+
+
+WAITING_FROG = SpriteSheet(load_image('waiting_frog.png', colorkey=-1), 14, 1, 10)
+ATTACKING_FROG = SpriteSheet(load_image('attacking_frog.png', colorkey=-1), 14, 1, 10)
+DYING_FROG = SpriteSheet(load_image('dying_frog.png', colorkey=-1), 14, 1, 10)
+WAITING_DEMON = SpriteSheet(load_image('waiting_demon.png', colorkey=-1), 6, 1, 6)
+ATTACKING_DEMON = SpriteSheet(load_image('attacking_demon.png', colorkey=-1), 15, 1, 6)
+DYING_DEMON = SpriteSheet(load_image('dying_demon.png', colorkey=-1), 22, 1, 6)
+ATTACKING_CAT = WAITING_CAT = SpriteSheet(load_image('waiting_cat.png', colorkey=-1), 57, 1, 4)
+DYING_CAT = SpriteSheet(load_image('dying_cat.png', colorkey=-1), 46, 1, 4)
+start_screen()
+while True:
+    chosen_enemy = fighting_menu()
+    if chosen_enemy == 0:
+        enemy = Frog([WAITING_FROG,
+                      ATTACKING_FROG,
+                      DYING_FROG], 320, 150, 160, 100)
+    elif chosen_enemy == 1:
+        enemy = Demon([WAITING_DEMON,
+                       ATTACKING_DEMON,
+                       DYING_DEMON], 200, 28, 400, 222)
+    elif chosen_enemy == 2:
+        enemy = Cat([WAITING_CAT,
+                     ATTACKING_CAT,
+                     DYING_CAT], 250, 90, 300, 160)
+    player = Player()
+    skillcheck = SkillCheck()
+    border_top = Border(0, 250, 800, 250)
+    border_bottom = Border(0, 470, 800, 250)
+    border_left = Border(0, 250, 0, 470)
+    border_right = Border(795, 250, 795, 470)
+    border_top_fight = Border(200, 250, 600, 250)
+    border_bottom_fight = Border(200, 470, 605, 470)
+    border_left_fight = Border(200, 250, 200, 470)
+    border_right_fight = Border(600, 250, 600, 470)
+    hud = HUD(100)
+    res = battle_screen()
+    if res == 'escaped':
+        escape_screen()
+    elif res == 'died':
+        player_lost_screen()
+    elif res == 'won_un':
+        unlocking_new_enemy_screen()
+    elif res == 'completed':
+        game_completed_screen()
+        screen.fill('black')
+        start_screen()
+    all_sprites = pygame.sprite.Group()
+    WAITING_FROG.set_back()
+    ATTACKING_FROG.set_back()
+    DYING_FROG.set_back()
+    WAITING_DEMON.set_back()
+    ATTACKING_DEMON.set_back()
+    DYING_DEMON.set_back()
+    WAITING_CAT.set_back()
+    ATTACKING_CAT.set_back()
+    DYING_CAT.set_back()
