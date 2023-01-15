@@ -561,17 +561,23 @@ class AnimatedEnemy(pygame.sprite.Sprite):
     def is_attacking(self):
         return True if self.status == 1 else False
 
-    def dying_animation(self):
+    def dying_animation(self, enemies_won):
         if self.status == 2:
             self.ending_frames += 1
             if self.ending_frames == self.dying_sheet.get_frames_num():
                 self.dying_sheet = SpriteSheet(self.dying_sheet.get_last_frame(), 1, 1, 180)
                 font = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
+                font1 = pygame.font.Font('data/MonsterFriend2Fore.otf', 15)
                 ending_text = font.render('you won!', 1, pygame.Color('white'))
+                e_w_t = font1.render(f'enemies won: {enemies_won}', 1, pygame.Color('white'))
                 sprite = pygame.sprite.Sprite(all_sprites)
                 sprite.image = ending_text
                 sprite.rect = ending_text.get_rect()
                 sprite.rect.x, sprite.rect.y = 400 - (sprite.rect.width // 2), (210 - sprite.rect.height) // 2
+                e_w = pygame.sprite.Sprite(all_sprites)
+                e_w.image = e_w_t
+                e_w.rect = e_w_t.get_rect()
+                e_w.rect.x, e_w.rect.y = 400 - (e_w.rect.width // 2), (150 - e_w.rect.height) // 2
             if self.ending_frames == self.ending_frames_sum:
                 return True
             else:
@@ -994,6 +1000,7 @@ def battle_screen(sound):
     key_w = False
     key_s = False
     running = True
+    enemies_won = 0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1045,9 +1052,16 @@ def battle_screen(sound):
             sound.stop()
             skillcheck.kill()
             enemy.die()
-            if enemy.ending_frames == enemy.dying_sheet_frames_num:
+            if enemy.ending_frames + 1 == enemy.dying_sheet_frames_num:
                 win_sound.play()
-            if enemy.dying_animation():
+                with open('data/enemies_won.txt', 'r', newline='') as file:
+                    data = int(file.read())
+                    enemies_won = data + 1
+                    file.close()
+                with open('data/enemies_won.txt', 'w', newline='') as file:
+                    file.write(str(enemies_won))
+                    file.close()
+            if enemy.dying_animation(enemies_won):
                 with open('data/enemies_completed.txt', 'r', newline='') as file2:
                     data = file2.readlines()
                     data = [int(x.strip()) for x in data]
