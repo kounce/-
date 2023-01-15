@@ -499,7 +499,7 @@ class AnimatedEnemy(pygame.sprite.Sprite):
                 sprite = pygame.sprite.Sprite(all_sprites)
                 sprite.image = ending_text
                 sprite.rect = ending_text.get_rect()
-                sprite.rect.x, sprite.rect.y = 400 - (sprite.rect.width // 2), (250 - sprite.rect.height) // 2
+                sprite.rect.x, sprite.rect.y = 400 - (sprite.rect.width // 2), (210 - sprite.rect.height) // 2
             if self.ending_frames == self.ending_frames_sum:
                 return True
             else:
@@ -574,10 +574,28 @@ class Demon(AnimatedEnemy):
     def move(self):
         """Функция выбирает случайную тактику из возможных и использует ее для атаки"""
         if self.attacking_count == 0:  # если это первый кадр, то выбирается случайная тактика
-            from random import choice
-            attack = choice([int(x) for x in range(1, 9) if x != self.past_attack])
+            from random import choice, randint
+            attack = choice([int(x) for x in range(1, 7) if x != self.past_attack])
             self.past_attack = attack
-            self.tactic = load_tactic(self.enemy_name + '_attack_' + str(attack) + '.txt')
+            if attack > 4:
+                self.tactic = {}
+                for i in range(1, 51):
+                    w = randint(1, 4)
+                    if w == 1:
+                        self.tactic[60 + i * 20] = [load_image('fireball.png', colorkey='white'),
+                                                    100, randint(250, 450), 70, 0, 2, 0]
+                    if w == 2:
+                        self.tactic[60 + i * 20] = [load_image('fireball.png', colorkey='white'),
+                                                    randint(200, 580), 120, 0, 70, 0, 2]
+                    if w == 3:
+                        self.tactic[60 + i * 20] = [load_image('fireball.png', colorkey='white'),
+                                                    680, randint(250, 450), -70, 0, -2, 0]
+                    if w == 4:
+                        self.tactic[60 + i * 20] = [load_image('fireball.png', colorkey='white'),
+                                                    randint(200, 580), 550, 0, -70, 0, -2]
+                    self.tactic[1300] = 'END'
+            else:
+                self.tactic = load_tactic(self.enemy_name + '_attack_' + str(attack) + '.txt')
         try:
             self.attacking_count += 1  # считаем кадры
             # если кадр не последний, то успешно создается новая частица
@@ -618,10 +636,97 @@ class Cat(AnimatedEnemy):
     def move(self):
         """Функция выбирает случайную тактику из возможных и использует ее для атаки"""
         if self.attacking_count == 0:  # если это первый кадр, то выбирается случайная тактика
-            from random import choice
-            attack = choice([int(x) for x in range(1, 3) if x != self.past_attack])
+            from random import choice, randint
+            attack = choice([int(x) for x in range(1, 6) if x != self.past_attack])
             self.past_attack = attack
-            self.tactic = load_tactic(self.enemy_name + '_attack_' + str(attack) + '.txt')
+            if attack == 1:
+                self.tactic = {}
+                for i in range(1, 51):
+                    w = randint(1, 4)
+                    c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                    if w == 1:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    100, randint(250, 440), 70, 0, 4, 0]
+                    if w == 2:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    randint(200, 570), 120, 0, 70, 0, 4]
+                    if w == 3:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    680, randint(250, 440), -70, 0, -4, 0]
+                    if w == 4:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    randint(200, 570), 550, 0, -70, 0, -4]
+                self.tactic[250 + 50 * 10] = 'END'
+            elif attack == 2:
+                self.tactic = {}
+                self.tactic[1] = [load_image(f'leftcatwall.png'),
+                                  200, 250, 0, 0, 0, 0]
+                self.tactic[2] = [load_image(f'rightcatwall.png'),
+                                  455, 250, 0, 0, 0, 0]
+                s = 0
+                for i in range(1, 21):
+                    w = choice([int(x) for x in range(1, 4) if x != s])
+                    c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                    if w == 1:
+                        self.tactic[60 + i * 30] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    350, 100, 0, 80, 0, 2]
+                    if w == 2:
+                        self.tactic[60 + i * 30] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    385, 100, 0, 80, 0, 2]
+                    if w == 3:
+                        self.tactic[60 + i * 30] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    420, 100, 0, 80, 0, 2]
+                    s = w
+                self.tactic[830] = 'END'
+            elif attack == 3:
+                self.tactic = {}
+                for i in range(1, 61):
+                    w = randint(1, 2)
+                    c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                    if w == 1:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    20, 440, randint(40, 180), -300, 0, 3]
+                    if w == 2:
+                        self.tactic[60 + i * 10] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    750, 440, -randint(40, 180), -300, 0, 3]
+                self.tactic[360 + 60 * 10] = 'END'
+            elif attack == 4:
+                self.tactic = {}
+                self.tactic[1] = [load_image(f'waves.png', colorkey=(3, 3, 3)),
+                                  800, 250, -200, 0, 0, 0]
+                for i in range(1, 61):
+                    w = randint(1, 2)
+                    c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                    if w == 1:
+                        self.tactic[60 + i * 30] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    randint(200, 570), 120, 0, 80, 0, 3]
+                    if w == 2:
+                        self.tactic[60 + i * 30] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                    randint(200, 570), 800, 0, -80, 0, -3]
+                self.tactic[360 + 60 * 30] = 'END'
+            elif attack == 5:
+                self.tactic = {}
+                player.rect.x = 500
+                player.rect.y = 325
+                self.tactic[1] = [load_image(f'cotton_red_ball.png', colorkey='black'),
+                                  385, 345, 0, 0, 0, 0]
+                self.tactic[2] = [load_image(f'square_borders.png', colorkey='black'),
+                                  202, 252, 0, 0, 0, 0]
+                y_r = [1, 0.8, 0.6, 0.4, 0.2, 0, -0.2, -0.4, -0.6, -0.8, -1]
+                y = sorted(y_r)[1:]
+                x_r = [0, 0.2, 0.4, 0.6, 0.8, 1, 0.8, 0.6, 0.4, 0.2, 0]
+                x = [-e for e in x_r][1:]
+                for i in range(3):
+                    for j in range(11):
+                        c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                        self.tactic[i * 20 * 10 + j * 10 + 60] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                                  385, 345, 80 * x_r[j], 80 * y_r[j], 0, 0]
+                    for j in range(9):
+                        c = choice(['red', 'blue', 'green', 'grey', 'purple'])
+                        self.tactic[i * 20 * 10 +
+                                    (j + 11) * 10 + 60] = [load_image(f'cotton_{c}_ball.png', colorkey='black'),
+                                                           385, 345, 80 * x[j], 80 * y[j], 0, 0]
+                self.tactic[60 * 10 + 260] = 'END'
         try:
             self.attacking_count += 1  # считаем кадры
             # если кадр не последний, то успешно создается новая частица
@@ -875,6 +980,7 @@ def battle_screen():
                         file1.write(f'1\n{com2}\n1')
                     else:
                         result = 'completed'
+                        file1.write(f'1\n1\n1')
                     file1.close()
                 running = False
         if enemy.status == 0:
@@ -920,6 +1026,8 @@ DYING_FROG = SpriteSheet(load_image('dying_frog.png', colorkey=-1), 14, 1, 10)
 WAITING_DEMON = SpriteSheet(load_image('waiting_demon.png', colorkey=-1), 6, 1, 6)
 ATTACKING_DEMON = SpriteSheet(load_image('attacking_demon.png', colorkey=-1), 15, 1, 6)
 DYING_DEMON = SpriteSheet(load_image('dying_demon.png', colorkey=-1), 22, 1, 6)
+ATTACKING_CAT = WAITING_CAT = SpriteSheet(load_image('waiting_cat.png', colorkey=-1), 57, 1, 4)
+DYING_CAT = SpriteSheet(load_image('dying_cat.png', colorkey=-1), 46, 1, 4)
 start_screen()
 while True:
     chosen_enemy = fighting_menu()
@@ -931,6 +1039,10 @@ while True:
         enemy = Demon([WAITING_DEMON,
                        ATTACKING_DEMON,
                        DYING_DEMON], 200, 28, 400, 222)
+    elif chosen_enemy == 2:
+        enemy = Cat([WAITING_CAT,
+                     ATTACKING_CAT,
+                     DYING_CAT], 250, 90, 300, 160)
     player = Player()
     skillcheck = SkillCheck()
     border_top = Border(0, 250, 800, 250)
@@ -951,6 +1063,8 @@ while True:
         unlocking_new_enemy_screen()
     elif res == 'completed':
         game_completed_screen()
+        screen.fill('black')
+        start_screen()
     all_sprites = pygame.sprite.Group()
     WAITING_FROG.set_back()
     ATTACKING_FROG.set_back()
@@ -958,3 +1072,6 @@ while True:
     WAITING_DEMON.set_back()
     ATTACKING_DEMON.set_back()
     DYING_DEMON.set_back()
+    WAITING_CAT.set_back()
+    ATTACKING_CAT.set_back()
+    DYING_CAT.set_back()
