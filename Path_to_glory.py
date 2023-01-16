@@ -1175,7 +1175,6 @@ def battle_screen(sound):
             skillcheck.kill()
             enemy.die()
             if enemy.ending_frames == 1:
-                win_sound.play()
                 # обновляется инфа о врагах
                 with open('data/enemies_won.txt', 'r', newline='') as file:
                     data = int(file.read())
@@ -1202,6 +1201,8 @@ def battle_screen(sound):
                         result = 'completed'
                         file1.write(f'1\n1\n1')
                     file1.close()
+            if enemy.ending_frames == enemy.dying_sheet_frames_num:
+                win_sound.play()
             if enemy.dying_animation(enemies_won):
                 sound.stop()
                 running = False
