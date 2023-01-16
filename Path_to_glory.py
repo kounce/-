@@ -1,9 +1,11 @@
+# Проект Марченко Андрея Дмитриевича и Кармышакова Азата Ильнуровича
 import math
 import os
 import sys
 
 import pygame
 
+# создание всего нужного для работы проекта
 pygame.init()
 pygame.mixer.init()
 choosing_sound = pygame.mixer.Sound('data/choosing_sound_effect.wav')
@@ -35,19 +37,23 @@ swap = True
 
 
 class MusicButton(pygame.sprite.Sprite):
+    """Класс кнопки, отключающей/включающей музыку"""
+
     def __init__(self):
         super().__init__(buttons_group)
+        # загружаем фотки
         self.on = pygame.transform.scale(load_image('music_on.png', colorkey='black'), (30, 30))
         self.off = pygame.transform.scale(load_image('mute_music.png', colorkey='black'), (30, 30))
         self.images = [self.on, self.off]
-        self.status = 0
+        self.status = 0  # 0 - музыка играет, 1 - музыка не играет
         self.image = self.images[self.status]
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = 10, 10
 
     def change_status(self):
-        self.status = self.status + 1 if self.status == 0 else 0
+        self.status = self.status + 1 if self.status == 0 else 0  # меняем статус
         self.image = self.images[self.status]
+        # для каждой музыки из списка всей музыки меняется громкость в соответствии со статусом
         if self.status == 0:
             for music in GAME_MUSIC:
                 music.set_volume(1)
@@ -57,19 +63,23 @@ class MusicButton(pygame.sprite.Sprite):
 
 
 class SoundButton(pygame.sprite.Sprite):
+    """Класс кнопки, отключающей/включающей звуковые эффекты"""
+
     def __init__(self):
         super().__init__(buttons_group)
+        # загружаем фотки
         self.on = pygame.transform.scale(load_image('sound_on.png', colorkey='black'), (30, 30))
         self.off = pygame.transform.scale(load_image('mute_sound.png', colorkey='black'), (30, 30))
         self.images = [self.on, self.off]
-        self.status = 0
+        self.status = 0  # 0 - звуки играют, 1 - звуки не играют
         self.image = self.images[self.status]
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = 40, 10
 
     def change_status(self):
-        self.status = self.status + 1 if self.status == 0 else 0
+        self.status = self.status + 1 if self.status == 0 else 0  # меняем статус
         self.image = self.images[self.status]
+        # для каждого звуки из списка всех звуковых эффектов меняется громкость в соответствии со статусом
         if self.status == 0:
             for music in SOUND_EFFECTS:
                 music.set_volume(1)
@@ -79,6 +89,7 @@ class SoundButton(pygame.sprite.Sprite):
 
 
 def load_image(name, colorkey=None):
+    """Функция загружает фотки и делает прозрачными, если надо"""
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
@@ -119,13 +130,13 @@ def start_screen():  # стартовый экран
     intro_start_rect = string_start_rendered.get_rect()
     intro_start_rect.top = 400
     intro_start_rect.x = 320
-    hide = False
+    hide = False  # переменная, чтобы прятать руководство при повторном нажатии
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            # проверка, что курсор находится на кнопке или нет
             elif event.type == pygame.MOUSEMOTION:
+                # проверки, что курсор находится на кнопке или нет
                 if intro_start_rect.collidepoint(event.pos):
                     color_start = 'yellow'
                 if intro_guide_rect.collidepoint(event.pos):
@@ -164,7 +175,7 @@ def start_screen():  # стартовый экран
 
 
 def guide_screen(hide):
-    if not hide:
+    if not hide:  # если первое нажатие, или после повторного, то рендерим руководство
         image = load_image('controls.png')
         image_rect = image.get_rect()
         screen.blit(image, (230, 220))
@@ -179,12 +190,12 @@ def guide_screen(hide):
         intro_esc_rect.top = 330
         intro_esc_rect.x = 240
         screen.blit(string_esc_render, intro_esc_rect)
-        string_space_render = font_ru.render('SPACE - остановить полоску на скиллчеке', 1, pygame.Color('white'))
+        string_space_render = font_ru.render('SPACE - остановить полоску на экране атаки', 1, pygame.Color('white'))
         intro_space_rect = string_space_render.get_rect()
         intro_space_rect.top = 360
-        intro_space_rect.x = 50
+        intro_space_rect.x = 30
         screen.blit(string_space_render, intro_space_rect)
-    else:
+    else:  # если повторное, то закрашиваем черным квадратом руководство
         black_image = pygame.Surface((800, 300))
         black_image_rect = black_image.get_rect()
         black_image.fill((0, 0, 0))
@@ -201,7 +212,7 @@ def fighting_menu():
     enemy1 = pygame.sprite.Sprite()
     enemy1.image = load_image('first_enemy.png', colorkey=-1)  # фото первого врага
     enemy1.rect = enemy1.image.get_rect()
-    if not com1:
+    if not com1:  # затемняем, если враг не пройден
         rect = enemy1.image.get_rect()
         image = pygame.Surface([rect.width, rect.height])
         image.set_alpha(230)
@@ -210,7 +221,7 @@ def fighting_menu():
     enemy2 = pygame.sprite.Sprite()
     enemy2.image = load_image('second_enemy.png', colorkey=-1)  # фото второго врага
     enemy2.rect = enemy1.image.get_rect()
-    if not com2:
+    if not com2:  # затемняем, если враг не пройден
         rect = enemy2.image.get_rect()
         image = pygame.Surface([rect.width, rect.height])
         image.set_alpha(230)
@@ -219,7 +230,7 @@ def fighting_menu():
     enemy3 = pygame.sprite.Sprite()
     enemy3.image = load_image('third_enemy.png')  # фото третьего врага
     enemy3.rect = enemy1.image.get_rect()
-    if not com3:
+    if not com3:  # затемняем, если враг не пройден
         rect = enemy3.image.get_rect()
         image = pygame.Surface([rect.width, rect.height])
         image.set_alpha(230)
@@ -236,12 +247,13 @@ def fighting_menu():
     enemy1.rect.x, enemy1.rect.y = 200, 68
     enemy2.rect.x, enemy2.rect.y = 200, 68
     enemy3.rect.x, enemy3.rect.y = 200, 68
-    fighting_menu_music.play(loops=-1)
+    fighting_menu_music.play(loops=-1)  # включаем музыку
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.KEYDOWN:
+                # меняем отображаемого врага
                 if event.key == 1073741904:
                     enemy_shown = enemy_shown - 1 if enemy_shown - 1 >= 0 else 2
                 if event.key == 1073741903:
@@ -252,20 +264,23 @@ def fighting_menu():
                     if (270 - 35 < x < 270 - 30 + 330 and
                             530 - 10 < y < 530 - 10 + 55):
                         if data[enemy_shown]:
+                            # выбор врага и остановка работы окна
                             fighting_menu_music.stop()
                             choosing_sound.play()
                             running = False
-                    if 730 < x < 770 and 275 < y < 325:
+                    if 730 < x < 770 and 275 < y < 325:  # меняем отображаемого врага
                         choosing_sound.play()
                         enemy_shown = enemy_shown + 1 if enemy_shown + 1 <= 2 else 0
-                    if 30 < x < 70 and 275 < y < 325:
+                    if 30 < x < 70 and 275 < y < 325:  # меняем отображаемого врага
                         choosing_sound.play()
                         enemy_shown = enemy_shown - 1 if enemy_shown - 1 >= 0 else 2
+                    # взаимодействие со звуком
                     pos_x, pos_y = event.pos
                     if 10 <= pos_x <= 40 and 10 <= pos_y <= 40:
                         music_btn.change_status()
                     if 50 <= pos_x <= 80 and 10 <= pos_y <= 40:
                         sound_btn.change_status()
+        # отрисовка всего в соответствии с параметрами
         screen.fill('black')
         enemies_group = pygame.sprite.Group()
         enemies_group.add(enemies[enemy_shown])
@@ -287,7 +302,7 @@ def fighting_menu():
         buttons_group.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
-    return enemy_shown
+    return enemy_shown  # возврат выбранного врага
 
 
 class HUD:
@@ -296,7 +311,6 @@ class HUD:
         self.hp = hp
         self.screen = pygame.Surface((800, 135))
         self.font = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
-        self.check_turn = False
         # установка цвета для отрисовки кнопок, чтобы игрок понял, на какой кнопке находится(во время своего хода)
         self.color = 'orange'
 
@@ -349,10 +363,8 @@ class Player(pygame.sprite.Sprite):  # класс игрока
         self.pause = 0
         # переменная, чтобы узнать прошло ли время, чтобы сменить цвет игрока во время неуязвимости
         self.change_color = 0
-        # переменная
+        # переменная, запускающая таймер "паузы" игры
         self.do_damage = False
-        # переменная
-        self.wait = True
         self.can_deal_damage = True
 
     # функции передвижения
@@ -375,10 +387,6 @@ class Player(pygame.sprite.Sprite):  # класс игрока
         self.rect = self.rect.move(0, 3)
         if pygame.sprite.spritecollideany(self, horizontal_borders):
             self.rect = self.rect.move(0, -3)
-
-    # функция хода игрока
-    def turn(self):
-        ...
 
     # функция для получения урона игроком
     def take_damage(self, health, invincibility):
@@ -412,12 +420,11 @@ class Player(pygame.sprite.Sprite):  # класс игрока
         if self.timer == self.change_color + 15:
             self.change_color += 15
             invincibility_color.reverse()
-        if self.do_damage:
+        if self.do_damage:  # если игрок наносит урон, запускается таймер на 150 итераций
             self.pause += 1
-            if self.pause == 150:
-                player.image.fill(pygame.Color('orange'))
+            if self.pause == 150:  # если 150 итераций, то производятся действия по продолжению игры
                 all_sprites.remove(skillcheck)
-                swap = not swap
+                swap = not swap  # меняет направление движения полоски
                 enemy.attack()
                 all_sprites.add(player)
                 self.pause = 0
@@ -441,12 +448,13 @@ def load_tactic(file_name):
         if len(part) == 2:
             res[int(part[0])] = 'END'
             break
-        # Частица в формате кадр: изображение, x, y, скорость по x, скорость по y, ускорение по x, ускорение по y
+        # Частица в формате кадр: изображение, x, y, скорость по x, скорость по y, ускорение по x, ускорение по y,
+        # colorkey
         # всё сразу переделывается в нужные типы
         if len(part) == 9:
             res[int(part[0])] = [load_image(part[1], colorkey=part[-1]),
                                  *[int(x) for x in part[2:6]], *[float(x) for x in part[6:8]]]
-        if len(part) == 8:
+        if len(part) == 8:  # работает, если убирать фон не надо
             res[int(part[0])] = [load_image(part[1]), *[int(x) for x in part[2:6]], *[float(x) for x in part[6:8]]]
     # возвращает значения в виде библиотеки
     return res
@@ -471,32 +479,38 @@ def cut_sheet(sheet, rect, columns, rows):
 
 
 class SpriteSheet:
+    """Класс упрощает работу с анимированными спрайтами"""
+
     def __init__(self, sheet, columns, rows, s):
+        """Класс принимает sheet, кол-во колон, рядов и частоту обновления"""
         self.rect = get_rect_from_sheet(sheet, columns, rows)
         self.images = cut_sheet(sheet, self.rect, columns, rows)
         self.s, self.st, self.cur_frame = s, 0, 0
 
     def get_frame(self):
-        return self.images[self.cur_frame]
+        return self.images[self.cur_frame]  # возвращает показываемый кадр
 
     def update(self):
-        self.st += 1
-        if self.st == self.s:
+        self.st += 1  # + счётчик кадров
+        if self.st == self.s:  # если счётчик совпадает с частотой обновление, то кадр обновляется
             self.st = 0
             self.cur_frame += 1
-            if self.cur_frame == len(self.images):
+            if self.cur_frame == len(self.images):  # зацикленность анимации
                 self.cur_frame = 0
 
     def set_back(self):
+        # возврат в начальное состояние
         self.cur_frame, self.st = 0, 0
 
     def get_rect(self):
         return self.rect
 
     def get_frames_num(self):
+        # возврат суммы кадром
         return len(self.images) * self.s
 
     def get_last_frame(self):
+        # возврат последнего кадра
         return self.images[-1]
 
 
@@ -571,8 +585,8 @@ class AnimatedEnemy(pygame.sprite.Sprite):
         self.rect = self.waiting_sheet.get_rect()  # задаем рект
         self.rect = self.rect.move(x, y)
         self.ending_frames = 0
-        self.ending_frames_sum = self.dying_sheet.get_frames_num() + 180
-        self.dying_sheet_frames_num = self.dying_sheet.get_frames_num()
+        self.ending_frames_sum = self.dying_sheet.get_frames_num() + 180  # кол-во кадров при анимации смерти
+        self.dying_sheet_frames_num = self.dying_sheet.get_frames_num()  # номер кадра, когда пора выводить текст
         self.health = 0
 
     def update(self):
@@ -612,6 +626,7 @@ class AnimatedEnemy(pygame.sprite.Sprite):
         self.status = 1
 
     def wait(self):
+        # запускается атака игрока и ставится ожидающий статус
         global skillcheck
         self.status = 0
         skillcheck = SkillCheck()
@@ -624,14 +639,17 @@ class AnimatedEnemy(pygame.sprite.Sprite):
         return True if self.status == 1 else False
 
     def dying_animation(self, enemies_won):
+        # отрисовка врага при смерти
         if self.status == 2:
-            self.ending_frames += 1
+            self.ending_frames += 1  # подсчет кадров
             if self.ending_frames == self.dying_sheet.get_frames_num():
+                # если пора, то рисуется текст
                 self.dying_sheet = SpriteSheet(self.dying_sheet.get_last_frame(), 1, 1, 180)
                 font = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
                 font1 = pygame.font.Font('data/MonsterFriend2Fore.otf', 15)
                 ending_text = font.render('you won!', 1, pygame.Color('white'))
-                e_w_t = font1.render(f'enemies won: {enemies_won}', 1, pygame.Color('white'))
+                e_w_t = font1.render(f'enemies won: {enemies_won}', 1, pygame.Color('white'))  # подсчет убитых врагов
+                # отрисовка
                 sprite = pygame.sprite.Sprite(all_sprites)
                 sprite.image = ending_text
                 sprite.rect = ending_text.get_rect()
@@ -640,7 +658,7 @@ class AnimatedEnemy(pygame.sprite.Sprite):
                 e_w.image = e_w_t
                 e_w.rect = e_w_t.get_rect()
                 e_w.rect.x, e_w.rect.y = 400 - (e_w.rect.width // 2), (150 - e_w.rect.height) // 2
-            if self.ending_frames == self.ending_frames_sum:
+            if self.ending_frames == self.ending_frames_sum:  # возвращает True, если пора завершать бой
                 return True
             else:
                 return False
@@ -779,6 +797,7 @@ class Cat(AnimatedEnemy):
             from random import choice, randint
             attack = choice([int(x) for x in range(1, 6) if x != self.past_attack])
             self.past_attack = attack
+            # куча разных тактик, требующих рандомное генерирование
             if attack == 1:
                 self.tactic = {}
                 for i in range(1, 51):
@@ -896,7 +915,7 @@ class SkillCheck(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = -15
         self.rect.y = 262
-        self.left_to_right = True
+        self.left_to_right = True  # переменная, для определения направления движения полоски
 
     def draw_skillcheck(self):
         pygame.draw.ellipse(screen, (190, 245, 116), (5, 255, 790, 215), 10)
@@ -967,6 +986,7 @@ class SkillCheck(pygame.sprite.Sprite):
 
 
 def escape_screen():
+    """Функция рисует окно, с соответствующей информацией"""
     font = pygame.font.Font('data/MonsterFriend2Fore.otf', 40)
     escaping_text = font.render('you ran away...', 1, pygame.Color('white'))
     rect = escaping_text.get_rect()
@@ -995,6 +1015,7 @@ def escape_screen():
 
 
 def player_lost_screen():
+    """Функция рисует окно, с соответствующей информацией"""
     font = pygame.font.Font('data/MonsterFriend2Fore.otf', 40)
     loosing_text = font.render('you died...', 1, pygame.Color('red'))
     rect = loosing_text.get_rect()
@@ -1023,6 +1044,7 @@ def player_lost_screen():
 
 
 def unlocking_new_enemy_screen():
+    """Функция рисует окно, с соответствующей информацией"""
     font = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
     unlock_text = font.render('you unlocked new enemy!', 1, pygame.Color('yellow'))
     rect = unlock_text.get_rect()
@@ -1051,6 +1073,7 @@ def unlocking_new_enemy_screen():
 
 
 def game_completed_screen():
+    """Функция рисует окно, с соответствующей информацией"""
     font_c = pygame.font.Font('data/MonsterFriend2Fore.otf', 30)
     font_t = pygame.font.Font('data/MonsterFriend2Fore.otf', 20)
     complete_text = font_c.render('you completed the game!', 1, pygame.Color('white'))
@@ -1096,6 +1119,7 @@ def battle_screen(sound):
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.KEYDOWN:
+                # если нажата клавиша, то игрок движется
                 if event.key in (pygame.K_a, pygame.K_LEFT):
                     key_a = True
                 if event.key in (pygame.K_d, pygame.K_RIGHT):
@@ -1104,6 +1128,7 @@ def battle_screen(sound):
                     key_w = True
                 if event.key in (pygame.K_s, pygame.K_DOWN):
                     key_s = True
+                # если пробел нажат, и в данный момент враг ожидает хода игрока, то игрок атакует
                 if event.key == pygame.K_SPACE and enemy.status == 0:
                     player.attack()
                 if event.key == pygame.K_ESCAPE:
@@ -1111,6 +1136,7 @@ def battle_screen(sound):
                     result = 'escaped'
                     running = False
             if event.type == pygame.KEYUP:
+                # если клавиша отжата, то движение останавливается
                 if event.key in (pygame.K_a, pygame.K_LEFT):
                     key_a = False
                 if event.key in (pygame.K_d, pygame.K_RIGHT):
@@ -1148,8 +1174,9 @@ def battle_screen(sound):
             sound.stop()
             skillcheck.kill()
             enemy.die()
-            if enemy.ending_frames + 1 == enemy.dying_sheet_frames_num:
+            if enemy.ending_frames == 1:
                 win_sound.play()
+                # обновляется инфа о врагах
                 with open('data/enemies_won.txt', 'r', newline='') as file:
                     data = int(file.read())
                     enemies_won = data + 1
@@ -1157,7 +1184,6 @@ def battle_screen(sound):
                 with open('data/enemies_won.txt', 'w', newline='') as file:
                     file.write(str(enemies_won))
                     file.close()
-            if enemy.dying_animation(enemies_won):
                 with open('data/enemies_completed.txt', 'r', newline='') as file2:
                     data = file2.readlines()
                     data = [int(x.strip()) for x in data]
@@ -1176,9 +1202,11 @@ def battle_screen(sound):
                         result = 'completed'
                         file1.write(f'1\n1\n1')
                     file1.close()
+            if enemy.dying_animation(enemies_won):
                 sound.stop()
                 running = False
         if enemy.status == 0:
+            # когда противник ждет хода игрока, убирается поле битвы и добавляется большое для атаки игрока
             all_sprites.remove(border_top_fight)
             all_sprites.remove(border_bottom_fight)
             all_sprites.remove(border_left_fight)
@@ -1199,6 +1227,7 @@ def battle_screen(sound):
                 if skillcheck.rect.x == 0:
                     player.attack()
         if enemy.status == 1:
+            # если противник атакует, то удаляется поле для атаки игрока, и добавляется поле для битвы
             player.can_deal_damage = True
             all_sprites.add(border_top_fight)
             all_sprites.add(border_bottom_fight)
@@ -1214,9 +1243,10 @@ def battle_screen(sound):
         buttons_group.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
-    return result
+    return result  # возвращает результат боя
 
 
+# загружаем все спрайты
 WAITING_FROG = SpriteSheet(load_image('waiting_frog.png', colorkey=-1), 14, 1, 10)
 ATTACKING_FROG = SpriteSheet(load_image('attacking_frog.png', colorkey=-1), 14, 1, 10)
 DYING_FROG = SpriteSheet(load_image('dying_frog.png', colorkey=-1), 14, 1, 10)
@@ -1225,11 +1255,14 @@ ATTACKING_DEMON = SpriteSheet(load_image('attacking_demon.png', colorkey=-1), 15
 DYING_DEMON = SpriteSheet(load_image('dying_demon.png', colorkey=-1), 22, 1, 6)
 ATTACKING_CAT = WAITING_CAT = SpriteSheet(load_image('waiting_cat.png', colorkey=-1), 57, 1, 4)
 DYING_CAT = SpriteSheet(load_image('dying_cat.png', colorkey=-1), 46, 1, 4)
+# кнопки взаимодействия со звуком
 sound_btn = SoundButton()
 music_btn = MusicButton()
+# начало работы
 start_screen()
-while True:
-    chosen_enemy = fighting_menu()
+while True:  # основной цикл
+    chosen_enemy = fighting_menu()  # выбор врага
+    # создание соответствующего врага и выбор музыки
     if chosen_enemy == 0:
         enemy = Frog([WAITING_FROG,
                       ATTACKING_FROG,
@@ -1245,6 +1278,7 @@ while True:
                      ATTACKING_CAT,
                      DYING_CAT], 250, 90, 300, 160)
         music = cat_battle_music
+    # подготовка к бою
     player = Player()
     skillcheck = SkillCheck()
     border_top = Border(0, 250, 800, 250)
@@ -1257,7 +1291,8 @@ while True:
     border_right_fight = Border(600, 250, 600, 470)
     hud = HUD(100)
     music.play(loops=-1)
-    res = battle_screen(music)
+    res = battle_screen(music)  # запуск боя и запись результата
+    # обновление окна в соответствии с результатом
     if res == 'escaped':
         escape_screen()
     elif res == 'died':
@@ -1267,7 +1302,8 @@ while True:
     elif res == 'completed':
         game_completed_screen()
         screen.fill('black')
-        start_screen()
+        start_screen()  # если игра пройдена, то запускается стартовый экран
+    # обновление спрайтов и музыки
     all_sprites = pygame.sprite.Group()
     WAITING_FROG.set_back()
     ATTACKING_FROG.set_back()
