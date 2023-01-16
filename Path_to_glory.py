@@ -17,6 +17,10 @@ fighting_menu_music = pygame.mixer.Sound('data/fighting_menu_music.wav')
 frog_battle_music = pygame.mixer.Sound('data/frog_battle_music.wav')
 demon_battle_music = pygame.mixer.Sound('data/demon_fighting_music.wav')
 cat_battle_music = pygame.mixer.Sound('data/cat_fighting_music.wav')
+SOUND_EFFECTS = [choosing_sound, attack_sound, complete_game_sound, win_sound,
+                 loose_sound, escaping_sound, unlocking_enemy_sound]
+GAME_MUSIC = [fighting_menu_music, frog_battle_music, demon_battle_music,
+              cat_battle_music]
 size = width, height = 800, 600
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Путь к славе')
@@ -24,9 +28,54 @@ invincibility_color = [pygame.Color('orange'), pygame.Color('purple')]
 all_sprites = pygame.sprite.Group()
 horizontal_borders = pygame.sprite.Group()
 vertical_borders = pygame.sprite.Group()
+buttons_group = pygame.sprite.Group()
 clock = pygame.time.Clock()
 fps = 60
 swap = True
+
+
+class MusicButton(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(buttons_group)
+        self.on = pygame.transform.scale(load_image('music_on.png', colorkey='black'), (30, 30))
+        self.off = pygame.transform.scale(load_image('mute_music.png', colorkey='black'), (30, 30))
+        self.images = [self.on, self.off]
+        self.status = 0
+        self.image = self.images[self.status]
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = 10, 10
+
+    def change_status(self):
+        self.status = self.status + 1 if self.status == 0 else 0
+        self.image = self.images[self.status]
+        if self.status == 0:
+            for music in GAME_MUSIC:
+                music.set_volume(1)
+        else:
+            for music in GAME_MUSIC:
+                music.set_volume(0)
+
+
+class SoundButton(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(buttons_group)
+        self.on = pygame.transform.scale(load_image('sound_on.png', colorkey='black'), (30, 30))
+        self.off = pygame.transform.scale(load_image('mute_sound.png', colorkey='black'), (30, 30))
+        self.images = [self.on, self.off]
+        self.status = 0
+        self.image = self.images[self.status]
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = 40, 10
+
+    def change_status(self):
+        self.status = self.status + 1 if self.status == 0 else 0
+        self.image = self.images[self.status]
+        if self.status == 0:
+            for music in SOUND_EFFECTS:
+                music.set_volume(1)
+        else:
+            for music in SOUND_EFFECTS:
+                music.set_volume(0)
 
 
 def load_image(name, colorkey=None):
@@ -93,6 +142,11 @@ def start_screen():  # стартовый экран
                     choosing_sound.play()
                     guide_screen(hide)
                     hide = not hide
+                pos_x, pos_y = event.pos
+                if 10 <= pos_x <= 40 and 10 <= pos_y <= 40:
+                    music_btn.change_status()
+                if 50 <= pos_x <= 80 and 10 <= pos_y <= 40:
+                    sound_btn.change_status()
         string_start_rendered = font_en.render('START', 1, pygame.Color(color_start))
         intro_start_rect = string_start_rendered.get_rect()
         intro_start_rect.top = 400
@@ -103,6 +157,8 @@ def start_screen():  # стартовый экран
         intro_guide_rect.top = 450
         intro_guide_rect.x = 330
         screen.blit(string_guide_render, intro_guide_rect)
+        pygame.draw.rect(screen, 'black', (0, 0, 80, 50))
+        buttons_group.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
 
@@ -205,6 +261,11 @@ def fighting_menu():
                     if 30 < x < 70 and 275 < y < 325:
                         choosing_sound.play()
                         enemy_shown = enemy_shown - 1 if enemy_shown - 1 >= 0 else 2
+                    pos_x, pos_y = event.pos
+                    if 10 <= pos_x <= 40 and 10 <= pos_y <= 40:
+                        music_btn.change_status()
+                    if 50 <= pos_x <= 80 and 10 <= pos_y <= 40:
+                        sound_btn.change_status()
         screen.fill('black')
         enemies_group = pygame.sprite.Group()
         enemies_group.add(enemies[enemy_shown])
@@ -223,6 +284,7 @@ def fighting_menu():
                                      'white'), ((730, 275), (770, 300), (730, 325)))
         pygame.draw.polygon(screen, ('yellow' if 30 < mouse_x < 70 and 275 < mouse_y < 325 else
                                      'white'), ((800 - 730, 275), (800 - 770, 300), (800 - 730, 325)))
+        buttons_group.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
     return enemy_shown
@@ -916,11 +978,18 @@ def escape_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos_x, pos_y = event.pos
+                if 10 <= pos_x <= 40 and 10 <= pos_y <= 40:
+                    music_btn.change_status()
+                if 50 <= pos_x <= 80 and 10 <= pos_y <= 40:
+                    sound_btn.change_status()
         screen.fill('black')
         screen.blit(escaping_text, rect)
         if sc == 0:
             running = False
         sc -= 1
+        buttons_group.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
 
@@ -937,11 +1006,18 @@ def player_lost_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos_x, pos_y = event.pos
+                if 10 <= pos_x <= 40 and 10 <= pos_y <= 40:
+                    music_btn.change_status()
+                if 50 <= pos_x <= 80 and 10 <= pos_y <= 40:
+                    sound_btn.change_status()
         screen.fill('black')
         screen.blit(loosing_text, rect)
         if sc == 0:
             running = False
         sc -= 1
+        buttons_group.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
 
@@ -958,11 +1034,18 @@ def unlocking_new_enemy_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos_x, pos_y = event.pos
+                if 10 <= pos_x <= 40 and 10 <= pos_y <= 40:
+                    music_btn.change_status()
+                if 50 <= pos_x <= 80 and 10 <= pos_y <= 40:
+                    sound_btn.change_status()
         screen.fill('black')
         screen.blit(unlock_text, rect)
         if sc == 0:
             running = False
         sc -= 1
+        buttons_group.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
 
@@ -983,12 +1066,19 @@ def game_completed_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos_x, pos_y = event.pos
+                if 10 <= pos_x <= 40 and 10 <= pos_y <= 40:
+                    music_btn.change_status()
+                if 50 <= pos_x <= 80 and 10 <= pos_y <= 40:
+                    sound_btn.change_status()
         screen.fill('black')
         screen.blit(complete_text, rect_c)
         screen.blit(thanks_text, rect_t)
         if sc == 0:
             running = False
         sc -= 1
+        buttons_group.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
 
@@ -1029,6 +1119,12 @@ def battle_screen(sound):
                     key_w = False
                 if event.key in (pygame.K_s, pygame.K_DOWN):
                     key_s = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos_x, pos_y = event.pos
+                if 10 <= pos_x <= 40 and 10 <= pos_y <= 40:
+                    music_btn.change_status()
+                if 50 <= pos_x <= 80 and 10 <= pos_y <= 40:
+                    sound_btn.change_status()
         screen.fill((0, 0, 0))
         if enemy.is_attacking():
             player.can_deal_damage = True
@@ -1115,6 +1211,7 @@ def battle_screen(sound):
         hud.draw_all()
         all_sprites.draw(screen)
         all_sprites.update()
+        buttons_group.draw(screen)
         pygame.display.flip()
         clock.tick(fps)
     return result
@@ -1128,6 +1225,8 @@ ATTACKING_DEMON = SpriteSheet(load_image('attacking_demon.png', colorkey=-1), 15
 DYING_DEMON = SpriteSheet(load_image('dying_demon.png', colorkey=-1), 22, 1, 6)
 ATTACKING_CAT = WAITING_CAT = SpriteSheet(load_image('waiting_cat.png', colorkey=-1), 57, 1, 4)
 DYING_CAT = SpriteSheet(load_image('dying_cat.png', colorkey=-1), 46, 1, 4)
+sound_btn = SoundButton()
+music_btn = MusicButton()
 start_screen()
 while True:
     chosen_enemy = fighting_menu()
