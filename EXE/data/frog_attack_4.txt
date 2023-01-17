@@ -1,0 +1,17 @@
+60;water_lily.png;-200;250;80;0;0;0;white
+61;water_lily.png;800;420;-80;0;0;0;white
+210;water_lily.png;-200;250;80;0;0;0;white
+211;water_lily.png;800;420;-80;0;0;0;white
+360;water_lily.png;-200;250;80;0;0;0;white
+361;water_lily.png;800;420;-80;0;0;0;white
+510;water_lily.png;-200;250;80;0;0;0;white
+511;water_lily.png;800;420;-80;0;0;0;white
+660;water_lily.png;-200;250;80;0;0;0;white
+661;water_lily.png;800;420;-80;0;0;0;white
+390;big_bubble.png;255;0;0;50;0;2;black
+420;big_bubble.png;370;0;0;50;0;2;black
+450;big_bubble.png;485;0;0;50;0;2;black
+560;big_bubble.png;485;600;0;-50;0;-2;black
+590;big_bubble.png;370;600;0;-50;0;-2;black
+620;big_bubble.png;255;600;0;-50;0;-2;black
+1500;END
