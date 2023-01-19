@@ -199,7 +199,7 @@ def guide_screen(hide):
         black_image = pygame.Surface((800, 300))
         black_image_rect = black_image.get_rect()
         black_image.fill((0, 0, 0))
-        screen.blit(black_image, (50, 180))
+        screen.blit(black_image, (0, 180))
 
 
 def fighting_menu():
